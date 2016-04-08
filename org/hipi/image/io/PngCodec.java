@@ -5,12 +5,8 @@ import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.RasterImage;
 import org.hipi.image.HipiImage;
-import org.hipi.image.HipiImage.HipiImageType;
-import org.hipi.image.HipiImageFactory;
 import org.hipi.image.PixelArray;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,9 +22,6 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.HashMap;
-
-import javax.imageio.metadata.IIOMetadata;
-import javax.imageio.ImageIO;
 
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.

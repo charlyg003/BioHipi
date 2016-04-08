@@ -5,14 +5,6 @@ import org.hipi.image.RasterImage;
 import org.hipi.image.PixelArrayByte;
 import org.hipi.util.ByteUtils;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.Writable;
-
 /**
  * A raster image represented as an array of Java bytes. A ByteImage consists
  * of a flat array of pixel values represented as a {@link PixelArrayByte} 

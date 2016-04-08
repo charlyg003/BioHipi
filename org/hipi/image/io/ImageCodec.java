@@ -1,8 +1,6 @@
 package org.hipi.image.io;
 
 import org.hipi.image.HipiImageHeader;
-import org.hipi.image.HipiImageHeader.HipiImageFormat;
-import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImage.HipiImageType;
 import org.hipi.image.RasterImage;
@@ -10,24 +8,15 @@ import org.hipi.image.HipiImageFactory;
 import org.hipi.image.PixelArray;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBuffer;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.HashMap;
 
 import javax.imageio.IIOImage;
-import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReadParam;
-import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageOutputStream;
 
 /**
  * Abstract base class for objects that serve as both an {@link ImageDecoder} and 

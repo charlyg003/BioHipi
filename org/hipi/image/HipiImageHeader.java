@@ -306,7 +306,7 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
    * @param utf8Bytes UTF-8-encoded bytes of a JSON object
    * representing the data
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public void setMetaDataFromBytes(byte[] utf8Bytes) {
     try {
       String jsonText = new String(utf8Bytes, "UTF-8");

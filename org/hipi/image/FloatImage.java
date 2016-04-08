@@ -6,13 +6,6 @@ import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.RasterImage;
 import org.hipi.image.PixelArrayFloat;
 import org.hipi.util.ByteUtils;
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.Writable;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 
 /**
  * A raster image represented as an array of Java floats. A FloatImage consists

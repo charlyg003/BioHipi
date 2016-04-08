@@ -1,8 +1,6 @@
 package org.hipi.imagebundle.mapreduce;
 
 import org.hipi.image.HipiImage;
-import org.hipi.image.FloatImage;
-import org.hipi.image.ByteImage;
 import org.hipi.image.HipiImageFactory;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.imagebundle.HipiImageBundle;
@@ -30,7 +28,8 @@ public class HibRecordReader extends RecordReader<HipiImageHeader, HipiImage> {
   private Configuration conf;
   private HipiImageBundle.HibReader reader;
 
-  @Override
+  @SuppressWarnings("unchecked")
+@Override
   public void initialize(InputSplit split, TaskAttemptContext context) 
   throws IOException, IllegalArgumentException {
 

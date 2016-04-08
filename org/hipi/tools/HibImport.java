@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Arrays;
 
+@SuppressWarnings("deprecation")
 public class HibImport {
 
   private static final Options options = new Options();

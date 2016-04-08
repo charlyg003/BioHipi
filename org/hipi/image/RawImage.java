@@ -4,14 +4,9 @@ import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.util.ByteUtils;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.Writable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.lang.IllegalArgumentException;
 
 /**
  * Concrete class that represents a raw byte representation of an image. These bytes are usually a

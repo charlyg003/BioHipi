@@ -4,11 +4,7 @@ import org.hipi.image.PixelArray;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.HipiImage;
-import org.hipi.image.PixelArray;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.RawComparator;
-import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;

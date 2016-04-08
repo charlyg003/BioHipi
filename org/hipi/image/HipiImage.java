@@ -3,18 +3,11 @@ package org.hipi.image;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
-import org.hipi.util.ByteUtils;
 
-import org.apache.hadoop.io.BinaryComparable;
-import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.Writable;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.HashMap;
 
-import javax.imageio.metadata.IIOMetadata;
 
 /**
  * An abstract base class from which all concrete image classes in HIPI must be derived. This class

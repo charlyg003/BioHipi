@@ -6,7 +6,6 @@ import org.hipi.image.HipiImageFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
 
 /**
  * Interface for decoding a {@link HipiImageHeader} and {@link HipiImage} from a Java

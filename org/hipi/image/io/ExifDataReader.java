@@ -4,7 +4,6 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 
 import java.io.BufferedInputStream;
@@ -40,7 +39,8 @@ public class ExifDataReader {
     return ImageMetadataReader.readMetadata(ubis);
   }
 
-  public static HashMap<String,String> extractAndFlatten(InputStream is) throws IOException {
+  @SuppressWarnings("rawtypes")
+public static HashMap<String,String> extractAndFlatten(InputStream is) throws IOException {
     HashMap<String,String> exifData = new HashMap<String,String>();
     try {
       ExifDataReader reader = new ExifDataReader(is);
