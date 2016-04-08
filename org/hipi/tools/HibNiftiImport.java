@@ -98,7 +98,9 @@ public class HibNiftiImport {
     	  metaData.put("source", source);
     	  String fileName = file.getPath().getName().toLowerCase();
     	  String suffix = fileName.substring(fileName.lastIndexOf('.'));
+    	  System.out.println(suffix);
     	  if (suffix.compareTo(".nii") == 0) {
+    		  System.out.println("SUCA");
     		  hib.addImage(fdis, HipiImageFormat.NIFTI, metaData);
     		  System.out.println(" ** added: " + fileName);
     	  }
@@ -127,14 +129,11 @@ public class HibNiftiImport {
         metaData.put("source", localPath);
         String fileName = file.getName().toLowerCase();
         String suffix = fileName.substring(fileName.lastIndexOf('.'));
-        if (suffix.compareTo(".jpg") == 0 || suffix.compareTo(".jpeg") == 0) {
-         hib.addImage(fis, HipiImageFormat.JPEG, metaData);
-         System.out.println(" ** added: " + fileName);
-       }
-       else if (suffix.compareTo(".png") == 0) {
-         hib.addImage(fis, HipiImageFormat.PNG, metaData);
-         System.out.println(" ** added: " + fileName);
-       } 
+        System.out.println(suffix);
+        if (suffix.compareTo(".nii") == 0) {
+        	hib.addImage(fis, HipiImageFormat.NIFTI, metaData);
+        	System.out.println(" ** added: " + fileName);
+        }
      }
 
      hib.close();

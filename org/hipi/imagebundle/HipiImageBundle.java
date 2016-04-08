@@ -601,7 +601,7 @@ public class HipiImageBundle {
 
     currentOffset += 12 + imageHeaderLength + imageLength;
     indexOutputStream.writeLong(currentOffset);
-
+    imageStream.close();
     // debug
   //    System.out.println("Offset: " + currentOffset);
   }
@@ -620,9 +620,9 @@ public class HipiImageBundle {
     	throw new IllegalArgumentException("Not implemented.");
     case NIFTI:
     	nifti = true;
-    	throw new IllegalArgumentException("Implementing");
+    	break;
+//    	throw new IllegalArgumentException("Implementing");
     case UNDEFINED:
-    default:
     	throw new IllegalArgumentException("Unrecognized or unsupported image format.");
     }
 
@@ -643,8 +643,8 @@ public class HipiImageBundle {
     	if (metaData != null) {
     		header.setMetaData(metaData);
     	}
-    	bufferedInputStream.mark(Integer.MAX_VALUE); // 100MB
-    	bufferedInputStream.reset();
+//    	bufferedInputStream.mark(Integer.MAX_VALUE); // 100MB
+//    	bufferedInputStream.reset();
     	addImage(header, bufferedInputStream);
     }
   }

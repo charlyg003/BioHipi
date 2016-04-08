@@ -461,136 +461,133 @@ public class Nifti1Dataset {
 		byte bb[];
 		int i;
 
-		dis = new DataInputStream(ip);
-		
-		try {
-			///// first, read dim[0] to get endian-ness
-			dis.skipBytes(40);  
-			s = dis.readShort();
-			dis.close();
-			if ((s < 1) || (s > 7))
-				big_endian = false;
-			else
-				big_endian = true;
+		dis = new DataInputStream(new BufferedInputStream(ip));
+		dis.mark(Integer.MAX_VALUE);
+//		try {
+			/// first, read dim[0] to get endian-ness
+		dis.skipBytes(40);  
+		s = dis.readShort();
+//		dis.close();
+		if ((s < 1) || (s > 7))
+			big_endian = false;
+		else
+			big_endian = true;
+
+		dis.reset();
+
+		ecs = new EndianCorrectInputStream(dis,big_endian);
+
+		sizeof_hdr = ecs.readIntCorrect();
+
+		bb = new byte[10];
+		ecs.readFully(bb,0,10);
+		data_type_string = new StringBuffer(new String(bb));
+
+		bb = new byte[18];
+		ecs.readFully(bb,0,18);
+		db_name = new StringBuffer(new String(bb));
+
+		extents = ecs.readIntCorrect();
+
+		session_error = ecs.readShortCorrect();
+
+		regular = new StringBuffer();
+		regular.append((char)(ecs.readUnsignedByte()));
+
+		dim_info = new StringBuffer();
+		dim_info.append((char)(ecs.readUnsignedByte()));
+		ss = unpackDimInfo((int)dim_info.charAt(0));
+		freq_dim = ss[0];
+		phase_dim = ss[1];
+		slice_dim = ss[2];
+
+		for (i=0; i<8; i++)
+			dim[i] = ecs.readShortCorrect();
+		if (dim[0] > 0)
+			XDIM = dim[1];
+		if (dim[0] > 1)
+			YDIM = dim[2];
+		if (dim[0] > 2)
+			ZDIM = dim[3];
+		if (dim[0] > 3)
+			TDIM = dim[4];
+
+		for (i=0; i<3; i++)
+			intent[i] = ecs.readFloatCorrect();
+
+		intent_code = ecs.readShortCorrect();
+
+		datatype = ecs.readShortCorrect();
+
+		bitpix = ecs.readShortCorrect();
+
+		slice_start = ecs.readShortCorrect();
+
+		for (i=0; i<8; i++)
+			pixdim[i] = ecs.readFloatCorrect();
+		qfac = (short) Math.floor((double)(pixdim[0]));
+
+		vox_offset = ecs.readFloatCorrect();
+
+		scl_slope = ecs.readFloatCorrect();
+		scl_inter = ecs.readFloatCorrect();
+
+		slice_end = ecs.readShortCorrect();
+
+		slice_code = (byte) ecs.readUnsignedByte();
+
+		xyzt_units = (byte) ecs.readUnsignedByte();
+		ss = unpackUnits((int)xyzt_units);
+		xyz_unit_code =  ss[0];
+		t_unit_code =  ss[1];
+
+		cal_max = ecs.readFloatCorrect();
+		cal_min = ecs.readFloatCorrect();
+
+		slice_duration = ecs.readFloatCorrect();
+
+		toffset = ecs.readFloatCorrect();
+
+		glmax = ecs.readIntCorrect();
+		glmin = ecs.readIntCorrect();
+
+		bb = new byte[80];
+		ecs.readFully(bb,0,80);
+		descrip = new StringBuffer(new String(bb));
+
+		bb = new byte[24];
+		ecs.readFully(bb,0,24);
+		aux_file = new StringBuffer(new String(bb));
+
+		qform_code = ecs.readShortCorrect();
+		sform_code = ecs.readShortCorrect();
+
+		for (i=0; i<3; i++)
+			quatern[i] = ecs.readFloatCorrect();
+		for (i=0; i<3; i++)
+			qoffset[i] = ecs.readFloatCorrect();
+
+		for (i=0; i<4; i++)
+			srow_x[i] = ecs.readFloatCorrect();
+		for (i=0; i<4; i++)
+			srow_y[i] = ecs.readFloatCorrect();
+		for (i=0; i<4; i++)
+			srow_z[i] = ecs.readFloatCorrect();
 
 
-			///// get input stream that will flip bytes if necessary 
-			if (ds_hdrname.endsWith(".gz"))
-				ecs = new EndianCorrectInputStream(new GZIPInputStream(new FileInputStream(ds_hdrname)),big_endian);
-			else
-				ecs = new EndianCorrectInputStream(ds_hdrname,big_endian);
+		bb = new byte[16];
+		ecs.readFully(bb,0,16);
+		intent_name = new StringBuffer(new String(bb));
 
-			sizeof_hdr = ecs.readIntCorrect();
+		bb = new byte[4];
+		ecs.readFully(bb,0,4);
+		magic = new StringBuffer(new String(bb));
 
-			bb = new byte[10];
-			ecs.readFully(bb,0,10);
-			data_type_string = new StringBuffer(new String(bb));
+		//		}
+		//		catch (IOException ex) {
+		//			throw new IOException("Error: unable to read header file "+ds_hdrname+": "+ex.getMessage());
+		//		}
 
-			bb = new byte[18];
-			ecs.readFully(bb,0,18);
-			db_name = new StringBuffer(new String(bb));
-
-			extents = ecs.readIntCorrect();
-
-			session_error = ecs.readShortCorrect();
-
-			regular = new StringBuffer();
-			regular.append((char)(ecs.readUnsignedByte()));
-
-			dim_info = new StringBuffer();
-			dim_info.append((char)(ecs.readUnsignedByte()));
-			ss = unpackDimInfo((int)dim_info.charAt(0));
-			freq_dim = ss[0];
-			phase_dim = ss[1];
-			slice_dim = ss[2];
-
-			for (i=0; i<8; i++)
-				dim[i] = ecs.readShortCorrect();
-			if (dim[0] > 0)
-				XDIM = dim[1];
-			if (dim[0] > 1)
-				YDIM = dim[2];
-			if (dim[0] > 2)
-				ZDIM = dim[3];
-			if (dim[0] > 3)
-				TDIM = dim[4];
-
-			for (i=0; i<3; i++)
-				intent[i] = ecs.readFloatCorrect();
-
-			intent_code = ecs.readShortCorrect();
-
-			datatype = ecs.readShortCorrect();
-
-			bitpix = ecs.readShortCorrect();
-
-			slice_start = ecs.readShortCorrect();
-
-			for (i=0; i<8; i++)
-				pixdim[i] = ecs.readFloatCorrect();
-			qfac = (short) Math.floor((double)(pixdim[0]));
-
-			vox_offset = ecs.readFloatCorrect();
-
-			scl_slope = ecs.readFloatCorrect();
-			scl_inter = ecs.readFloatCorrect();
-
-			slice_end = ecs.readShortCorrect();
-
-			slice_code = (byte) ecs.readUnsignedByte();
-
-			xyzt_units = (byte) ecs.readUnsignedByte();
-			ss = unpackUnits((int)xyzt_units);
-			xyz_unit_code =  ss[0];
-			t_unit_code =  ss[1];
-
-			cal_max = ecs.readFloatCorrect();
-			cal_min = ecs.readFloatCorrect();
-
-			slice_duration = ecs.readFloatCorrect();
-
-			toffset = ecs.readFloatCorrect();
-
-			glmax = ecs.readIntCorrect();
-			glmin = ecs.readIntCorrect();
-
-			bb = new byte[80];
-			ecs.readFully(bb,0,80);
-			descrip = new StringBuffer(new String(bb));
-
-			bb = new byte[24];
-			ecs.readFully(bb,0,24);
-			aux_file = new StringBuffer(new String(bb));
-
-			qform_code = ecs.readShortCorrect();
-			sform_code = ecs.readShortCorrect();
-
-			for (i=0; i<3; i++)
-				quatern[i] = ecs.readFloatCorrect();
-			for (i=0; i<3; i++)
-				qoffset[i] = ecs.readFloatCorrect();
-
-			for (i=0; i<4; i++)
-				srow_x[i] = ecs.readFloatCorrect();
-			for (i=0; i<4; i++)
-				srow_y[i] = ecs.readFloatCorrect();
-			for (i=0; i<4; i++)
-				srow_z[i] = ecs.readFloatCorrect();
-
-
-			bb = new byte[16];
-			ecs.readFully(bb,0,16);
-			intent_name = new StringBuffer(new String(bb));
-
-			bb = new byte[4];
-			ecs.readFully(bb,0,4);
-			magic = new StringBuffer(new String(bb));
-
-		}
-		catch (IOException ex) {
-			throw new IOException("Error: unable to read header file "+ds_hdrname+": "+ex.getMessage());
-		}
-		
 
 		/////// Read possible extensions
 		if (ds_is_nii) 
@@ -598,10 +595,10 @@ public class Nifti1Dataset {
 		else
 			readNp1Ext(ecs);
 
+		dis.reset();	
+//		ecs.close();
 
-	ecs.close();
-
-	return;	
+		return;	
 	}
 
 	////////////////////////////////////////////////////////////////////
