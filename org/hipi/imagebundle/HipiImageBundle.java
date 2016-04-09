@@ -1,15 +1,11 @@
 package org.hipi.imagebundle;
 
 import org.hipi.image.HipiImageHeader;
+import org.hipi.image.NiftiImage;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageFactory;
-import org.hipi.image.RawImage;
-import org.hipi.image.io.CodecManager;
-import org.hipi.image.io.ImageDecoder;
-import org.hipi.image.io.JpegCodec;
-import org.hipi.image.io.PngCodec;
 import org.hipi.mapreduce.Culler;
 import org.hipi.util.ByteUtils;
 import org.myhipi.nifti.Nifti1Dataset;
@@ -178,18 +174,18 @@ public class HipiImageBundle {
      * @return true if the next image record (header + pixel data) was successfully read and decoded. False if there are no more images or if an error occurs.
      */
     public boolean nextKeyValue() {
-
+    	
       try {
-
+    	 
         // Reset state of current key/value
         imageFormat = HipiImageFormat.UNDEFINED;
         imageBytes = null;
         imageHeader = null;
         image = null;
-
+        System.out.println("CURRENT OFFSET: " + currentOffset + " END " + endOffset);
         // A value of endOffset = 0 indicates "read to the end of
         // file", otherwise check segment boundary
-        if (endOffset > 0 && currentOffset > endOffset) {
+        if (endOffset > 0 && currentOffset >= endOffset) {
           // Already past end of file segment
           return false;
         }
@@ -233,102 +229,52 @@ public class HipiImageBundle {
 
         // Parse and validate image format
         int imageFormatInt = ((sig[8] & 0xff) << 24) | ((sig[9] & 0xff) << 16) | ((sig[10] & 0xff) << 8) | (sig[11] & 0xff);
-        try {
-          imageFormat = HipiImageFormat.fromInteger(imageFormatInt);
-        } catch (IllegalArgumentException e) {
-          throw new IOException("Found invalid image storage format in HIB at offset: " + currentOffset);
-        }
-        if (imageFormat == HipiImageFormat.UNDEFINED) {
-          throw new IOException("Found UNDEFINED image storage format in HIB at offset: " + currentOffset);
-        }
+//        try {
+//          imageFormat = HipiImageFormat.fromInteger(imageFormatInt);
+//        } catch (IllegalArgumentException e) {
+//          throw new IOException("Found invalid image storage format in HIB at offset: " + currentOffset);
+//        }
+//        if (imageFormat == HipiImageFormat.UNDEFINED) {
+//          throw new IOException("Found UNDEFINED image storage format in HIB at offset: " + currentOffset);
+//        }
 
-        /*
+
         System.out.println("nextKeyValue()");
         System.out.println("imageHeaderLength: " + imageHeaderLength);
         System.out.println("imageLength: " + imageLength);
         System.out.println("imageFormatInt: " + imageFormatInt);
         System.out.println("imageFormat: " + imageFormat.toInteger());
-        */
+         
 
         // Allocate byte array to hold image header data
         byte[] imageHeaderBytes = new byte[imageHeaderLength];
+        byte[] imageBytes = new byte[imageLength];
 
         // Allocate byte array to hold image data
-        imageBytes = new byte[imageLength];
 
         // TODO: What happens if either of these calls fails, throwing
         // an exception? The stream position will become out of sync
         // with currentOffset.
-        dataInputStream.readFully(imageHeaderBytes);
-        dataInputStream.readFully(imageBytes);
+        dataInputStream.readFully(imageHeaderBytes);        
+        dataInputStream.readFully(imageBytes);        
 
         // Advance byte offset by length of 12-byte signature plus
         // image header length plus image pixel data length
         currentOffset += 12 + imageHeaderLength + imageLength;
-
-        // Attempt to decode image header
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(imageHeaderBytes));
-        imageHeader = new HipiImageHeader(dis);
-
-        //  System.out.println(imageHeader);
-
-        // Wrap image bytes in stream
-        ByteArrayInputStream imageByteStream = new ByteArrayInputStream(imageBytes);
-
-        // Obtain suitable image decoder
-        ImageDecoder decoder = CodecManager.getDecoder(imageFormat);
-        if (decoder == null) {
-          throw new IOException("Unsupported storage format in image record ending at byte offset: " + currentOffset);
-        }
-
-        // Check if image should be culled
-        if (culler!=null) {
-          if (culler.includeExifDataInHeader()) {
-            imageByteStream.mark(Integer.MAX_VALUE);
-            HipiImageHeader imageHeaderWithExifData = decoder.decodeHeader(imageByteStream,true);
-            imageByteStream.reset();
-            imageHeader.setExifData(imageHeaderWithExifData.getAllExifData());
-          }
-          if (culler.cull(imageHeader)) {
-              // Move onto next image
-            return nextKeyValue();
-          }
-        }
-
+    	imageHeader = new HipiImageHeader(dis);
+//    	System.out.println("HeadInfo: " + imageHeader.getHeight() + " " + imageHeader.getWidth() + " " + imageHeader.getNumBands());
+//    	System.out.println("MetaInfo: " + imageHeader.getAllMetaData());
+    	DataInputStream imageDataStream = new DataInputStream(new ByteArrayInputStream(imageBytes));
         // Call appropriate decode function based on type of image object
         switch (imageFactory.getType()) {
-          case FLOAT:
-          case BYTE:
-          try {
-            image = decoder.decodeImage(imageByteStream, imageHeader, imageFactory, true);
-          } catch (Exception e) {
-            System.err.println("Runtime exception while attempting to decode raster image: " + 
-              e.getMessage());
-            e.printStackTrace();
-            // Attempt to keep going
-            return nextKeyValue();
-          }
-          break;
-          case RAW:
-          try {
-            RawImage rawImage = new RawImage();
-            rawImage.setHeader(imageHeader);
-            rawImage.setRawBytes(imageBytes);
-            image = (HipiImage)rawImage;
-          } catch (Exception e) {
-            System.err.println("Runtime exception while attempting to create RawImage: " + 
-              e.getMessage());
-            e.printStackTrace();
-            // Attempt to keep going
-            return nextKeyValue();
-          }
-          throw new RuntimeException("Support for RAW image type not yet implemented.");
-          case UNDEFINED:
+          case NIFTI:
+        	  NiftiImage nifti = new NiftiImage(imageDataStream);
+        	  image = nifti;
+              return true;
           default:
-          throw new IOException("Unexpected image type. Cannot proceed.");
+        	  throw new IOException("Unexpected image type. Cannot proceed.");
         }
-
-        return true;
 
       } catch (EOFException e) {
         System.err.println(String.format("EOF exception [%s] while decoding HIB image record ending at byte offset [%d]", 
@@ -550,7 +496,7 @@ public class HipiImageBundle {
    *
    * @throws IOException in the event of any I/O errors or if the HIB is not currently in a state that supports adding new images
    */
-  public void addImage(HipiImageHeader imageHeader, InputStream imageStream) throws IOException {
+  public void addImage(HipiImageHeader imageHeader, InputStream imageStream, Nifti1Dataset nii, int imageLength, byte imageBytes[]) throws IOException {
 
     if (fileMode != FILE_MODE_WRITE) {
       throw new IOException("HIB [" + indexFilePath.getName() + "] is not opened for writing. Must successfully open HIB for writing before calling this method.");
@@ -563,8 +509,8 @@ public class HipiImageBundle {
     int imageHeaderLength = imageHeaderBytes.length;
 
     // Read image input stream and convert to byte[]
-    byte imageBytes[] = ByteUtils.inputStreamToByteArray(imageStream);
-    int imageLength = imageBytes.length;
+//    byte imageBytes[] = ByteUtils.inputStreamToByteArray(imageStream);
+//    int imageLength = imageBytes.length;
 
     int imageFormatInt = imageHeader.getStorageFormat().toInteger();
 
@@ -583,21 +529,28 @@ public class HipiImageBundle {
     sig[10] = (byte)((imageFormatInt >>  8) & 0xff);
     sig[11] = (byte)((imageFormatInt      ) & 0xff);
 
-    /*
+   
       // debug
-    System.out.println("addImage()");
-    System.out.println("imageHeaderLength: " + imageHeaderLength);
-    System.out.println("imageLength: " + imageLength);
-    System.out.println("imageFormatInt: " + imageFormatInt);
-    System.out.printf("ImageHeader bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", 
-          imageHeaderBytes[0], imageHeaderBytes[1], imageHeaderBytes[2], imageHeaderBytes[3]);
-    System.out.printf("Image bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", 
-          imageBytes[0], imageBytes[1], imageBytes[2], imageBytes[3]);
-    */
+//    System.out.println("addImage()");
+//    System.out.println("imageHeaderLength: " + imageHeaderLength);
+//    System.out.println("imageLength: " + imageLength);
+//    System.out.println("imageFormatInt: " + imageFormatInt);
+//    System.out.printf("ImageHeader bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", 
+//          imageHeaderBytes[0], imageHeaderBytes[1], imageHeaderBytes[2], imageHeaderBytes[3]);
+//    System.out.printf("Image bytes: 0x%02X 0x%02X 0x%02X 0x%02X\n", 
+//          imageBytes[0], imageBytes[1], imageBytes[2], imageBytes[3]);
+  
 
     dataOutputStream.write(sig);
     dataOutputStream.write(imageHeaderBytes);
     dataOutputStream.write(imageBytes);
+
+    System.out.println("imageHeaderLength: " + imageHeaderLength);
+    System.out.println("imageLength: " + imageLength);
+    System.out.println("imageFormatInt: " + imageFormatInt);
+    
+//    nii.writeHeader(dataOutputStream);
+//    nii.writeData(dataOutputStream);
 
     currentOffset += 12 + imageHeaderLength + imageLength;
     indexOutputStream.writeLong(currentOffset);
@@ -607,46 +560,29 @@ public class HipiImageBundle {
   }
 
   public void addImage(InputStream inputStream, HipiImageFormat imageFormat, HashMap<String, String> metaData) throws IllegalArgumentException, IOException {
-    ImageDecoder decoder = null;
-    boolean nifti = false;
-    switch (imageFormat) {
-    case JPEG:
-    	decoder = JpegCodec.getInstance();
-    	break;
-    case PNG:
-    	decoder = PngCodec.getInstance();
-    	break;
-    case PPM:
-    	throw new IllegalArgumentException("Not implemented.");
-    case NIFTI:
-    	nifti = true;
-    	break;
-//    	throw new IllegalArgumentException("Implementing");
-    case UNDEFINED:
-    	throw new IllegalArgumentException("Unrecognized or unsupported image format.");
-    }
+//    boolean nifti = false;
+//    switch (imageFormat) {
+//    case NIFTI:
+//    	nifti = true;
+//    	break;
+////    	throw new IllegalArgumentException("Implementing");
+//    case UNDEFINED:
+//    	throw new IllegalArgumentException("Unrecognized or unsupported image format.");
+//    }
 
-    if(!nifti){
-    	BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-    	bufferedInputStream.mark(Integer.MAX_VALUE); // 100MB
-    	HipiImageHeader header = decoder.decodeHeader(bufferedInputStream);
-    	if (metaData != null) {
-    		header.setMetaData(metaData);
-    	}
-    	bufferedInputStream.reset();
-    	addImage(header, bufferedInputStream);
-    }else{
-    	BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-    	Nifti1Dataset nii = new Nifti1Dataset();
-    	nii.readHeader(inputStream);
-    	HipiImageHeader header = new HipiImageHeader(HipiImageFormat.NIFTI, HipiColorSpace.LUM, nii.XDIM, nii.YDIM, nii.ZDIM, null, null);
-    	if (metaData != null) {
-    		header.setMetaData(metaData);
-    	}
-//    	bufferedInputStream.mark(Integer.MAX_VALUE); // 100MB
-//    	bufferedInputStream.reset();
-    	addImage(header, bufferedInputStream);
+
+    BufferedInputStream bufferedInputStream = new BufferedInputStream(new DataInputStream(inputStream));
+    byte imageBytes[] = ByteUtils.inputStreamToByteArray(bufferedInputStream);
+    int imageLength = imageBytes.length;
+    bufferedInputStream.close();
+    inputStream = new BufferedInputStream(new ByteArrayInputStream(imageBytes));
+    Nifti1Dataset nii = new Nifti1Dataset();
+    nii.readHeader(inputStream);
+    HipiImageHeader header = new HipiImageHeader(HipiImageFormat.NIFTI, HipiColorSpace.LUM, nii.XDIM, nii.YDIM, nii.ZDIM, null, null);
+    if (metaData != null) {
+    	header.setMetaData(metaData);
     }
+    addImage(header, bufferedInputStream, nii, imageLength, imageBytes);
   }
 
   public void addImage(InputStream inputStream, HipiImageFormat imageFormat) throws IllegalArgumentException, IOException {

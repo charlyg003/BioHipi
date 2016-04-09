@@ -41,14 +41,6 @@ public class ByteUtils {
     } catch (RuntimeException re) {
       error = true; // this error should be thrown, even if there is an error closing stream
       throw re;
-    } finally {
-      try {
-        stream.close();
-      } catch (IOException ioe) {
-        if (!error) {
-          throw ioe;
-        }
-      }
     }
     output.flush();
     return output.toByteArray();

@@ -255,7 +255,7 @@ public class Nifti1Dataset {
 	public StringBuffer	intent_name;	// 16 char name/meaning/id for data
 	public StringBuffer	magic;		// 4 char id must be "ni1\0" or "n+1\0"
 	public byte		extension[];	// 4 byte array, byte 0 is 0/1 indicating extensions or not
-
+	public byte myData[];
 
 
 
@@ -463,20 +463,20 @@ public class Nifti1Dataset {
 
 		dis = new DataInputStream(new BufferedInputStream(ip));
 		dis.mark(Integer.MAX_VALUE);
+		
 //		try {
 			/// first, read dim[0] to get endian-ness
 		dis.skipBytes(40);  
 		s = dis.readShort();
-//		dis.close();
+		dis.reset();
 		if ((s < 1) || (s > 7))
 			big_endian = false;
 		else
 			big_endian = true;
 
-		dis.reset();
-
+		
 		ecs = new EndianCorrectInputStream(dis,big_endian);
-
+		ecs.mark(Integer.MAX_VALUE);
 		sizeof_hdr = ecs.readIntCorrect();
 
 		bb = new byte[10];
@@ -500,7 +500,166 @@ public class Nifti1Dataset {
 		freq_dim = ss[0];
 		phase_dim = ss[1];
 		slice_dim = ss[2];
+		
+		for (i=0; i<8; i++)
+			dim[i] = ecs.readShortCorrect();
+		if (dim[0] > 0)
+			XDIM = dim[1];
+		if (dim[0] > 1)
+			YDIM = dim[2];
+		if (dim[0] > 2)
+			ZDIM = dim[3];
+		if (dim[0] > 3)
+			TDIM = dim[4];
 
+		for (i=0; i<3; i++)
+			intent[i] = ecs.readFloatCorrect();
+
+		intent_code = ecs.readShortCorrect();
+
+		datatype = ecs.readShortCorrect();
+
+		bitpix = ecs.readShortCorrect();
+
+		slice_start = ecs.readShortCorrect();
+
+		for (i=0; i<8; i++)
+			pixdim[i] = ecs.readFloatCorrect();
+		qfac = (short) Math.floor((double)(pixdim[0]));
+
+		vox_offset = ecs.readFloatCorrect();
+
+		scl_slope = ecs.readFloatCorrect();
+		scl_inter = ecs.readFloatCorrect();
+
+		slice_end = ecs.readShortCorrect();
+
+		slice_code = (byte) ecs.readUnsignedByte();
+
+		xyzt_units = (byte) ecs.readUnsignedByte();
+		ss = unpackUnits((int)xyzt_units);
+		xyz_unit_code =  ss[0];
+		t_unit_code =  ss[1];
+
+		cal_max = ecs.readFloatCorrect();
+		cal_min = ecs.readFloatCorrect();
+
+		slice_duration = ecs.readFloatCorrect();
+
+		toffset = ecs.readFloatCorrect();
+
+		glmax = ecs.readIntCorrect();
+		glmin = ecs.readIntCorrect();
+
+		bb = new byte[80];
+		ecs.readFully(bb,0,80);
+		descrip = new StringBuffer(new String(bb));
+
+		bb = new byte[24];
+		ecs.readFully(bb,0,24);
+		aux_file = new StringBuffer(new String(bb));
+
+		qform_code = ecs.readShortCorrect();
+		sform_code = ecs.readShortCorrect();
+
+		for (i=0; i<3; i++)
+			quatern[i] = ecs.readFloatCorrect();
+		for (i=0; i<3; i++)
+			qoffset[i] = ecs.readFloatCorrect();
+
+		for (i=0; i<4; i++)
+			srow_x[i] = ecs.readFloatCorrect();
+		
+		for (i=0; i<4; i++)
+			srow_y[i] = ecs.readFloatCorrect();
+
+		for (i=0; i<4; i++)
+			srow_z[i] = ecs.readFloatCorrect();
+
+
+		bb = new byte[16];
+		ecs.readFully(bb,0,16);
+		intent_name = new StringBuffer(new String(bb));
+
+		bb = new byte[4];
+		ecs.readFully(bb,0,4);
+		magic = new StringBuffer(new String(bb));
+
+		short ZZZ = ZDIM;
+		if (dim[0] == 2)
+			ZZZ = 1;
+
+		int blob_size = XDIM*YDIM*ZZZ*bytesPerVoxel(datatype);
+		myData = new byte[(int)blob_size];
+		dis.readFully(myData,0,(int)blob_size);
+
+		
+		//		}
+		//		catch (IOException ex) {
+		//			throw new IOException("Error: unable to read header file "+ds_hdrname+": "+ex.getMessage());
+		//		}
+
+
+		/////// Read possible extensions
+		if (ds_is_nii) 
+			readNiiExt(ecs);
+		else
+			readNp1Ext(ecs);
+
+//		dis.reset();
+//		ecs.close();
+
+		return;	
+	}
+	
+	public void readHeaderV2(InputStream ip) throws IOException, FileNotFoundException {
+
+		DataInputStream dis;
+		EndianCorrectInputStream ecs;
+		short s, ss[];
+		byte bb[];
+		int i;
+
+		dis = new DataInputStream(new BufferedInputStream(ip));
+		dis.mark(Integer.MAX_VALUE);
+		
+//		try {
+			/// first, read dim[0] to get endian-ness
+		dis.skipBytes(40);  
+		s = dis.readShort();
+//		dis.close();
+		if ((s < 1) || (s > 7))
+			big_endian = false;
+		else
+			big_endian = true;
+
+		dis.reset();
+
+		ecs = new EndianCorrectInputStream(dis,big_endian);
+
+		sizeof_hdr = ecs.readIntCorrect();
+		bb = new byte[10];
+		ecs.readFully(bb,0,10);
+		data_type_string = new StringBuffer(new String(bb));
+
+		bb = new byte[18];
+		ecs.readFully(bb,0,18);
+		db_name = new StringBuffer(new String(bb));
+
+		extents = ecs.readIntCorrect();
+
+		session_error = ecs.readShortCorrect();
+
+		regular = new StringBuffer();
+		regular.append((char)(ecs.readUnsignedByte()));
+
+		dim_info = new StringBuffer();
+		dim_info.append((char)(ecs.readUnsignedByte()));
+		ss = unpackDimInfo((int)dim_info.charAt(0));
+		freq_dim = ss[0];
+		phase_dim = ss[1];
+		slice_dim = ss[2];
+		
 		for (i=0; i<8; i++)
 			dim[i] = ecs.readShortCorrect();
 		if (dim[0] > 0)
@@ -1099,6 +1258,167 @@ public class Nifti1Dataset {
 		}
 
 	return;	
+	}
+	
+	public void writeHeader(DataOutputStream fsout) throws IOException, FileNotFoundException {
+
+		EndianCorrectOutputStream ecs;
+		ByteArrayOutputStream baos;
+		byte b, ext_blob[];
+		int hsize;
+		int i,n;
+		int extlist[][];
+
+
+		// header is 348 except nii and anz/hdr w/ extensions is 352
+		hsize = ANZ_HDR_SIZE;
+		if ( (ds_is_nii) || (extension[0] != 0) )
+			hsize += 4;
+
+		try {
+
+		baos = new ByteArrayOutputStream(hsize);
+
+		ecs = new EndianCorrectOutputStream(baos,big_endian);
+
+
+		ecs.writeIntCorrect(sizeof_hdr);
+
+		if (data_type_string.length() >= 10) {
+			ecs.writeBytes(data_type_string.substring(0,10));
+		}
+		else {
+			ecs.writeBytes(data_type_string.toString());
+			for (i=0; i<(10-data_type_string.length()); i++)
+				ecs.writeByte(0);
+		}
+
+		if (db_name.length() >= 18) {
+			ecs.writeBytes(db_name.substring(0,18));
+		}
+		else {
+			ecs.writeBytes(db_name.toString());
+			for (i=0; i<(18-db_name.length()); i++)
+				ecs.writeByte(0);
+		}
+
+		ecs.writeIntCorrect(extents);
+
+		ecs.writeShortCorrect(session_error);
+
+		ecs.writeByte((int) regular.charAt(0));
+
+		b = packDimInfo(freq_dim, phase_dim, slice_dim);
+		ecs.writeByte((int) b);
+
+		for (i=0; i<8; i++)
+			ecs.writeShortCorrect(dim[i]);
+
+		for (i=0; i<3; i++)
+			ecs.writeFloatCorrect(intent[i]);
+			
+		ecs.writeShortCorrect(intent_code);
+
+		ecs.writeShortCorrect(datatype);
+
+		ecs.writeShortCorrect(bitpix);
+
+		ecs.writeShortCorrect(slice_start);
+		
+		for (i=0; i<8; i++)
+			ecs.writeFloatCorrect(pixdim[i]);
+
+
+		ecs.writeFloatCorrect(vox_offset);
+
+		ecs.writeFloatCorrect(scl_slope);
+		ecs.writeFloatCorrect(scl_inter);
+
+		ecs.writeShortCorrect(slice_end);
+
+		ecs.writeByte((int)slice_code);
+
+		ecs.writeByte((int)packUnits(xyz_unit_code,t_unit_code));
+
+
+		ecs.writeFloatCorrect(cal_max);
+		ecs.writeFloatCorrect(cal_min);
+
+		ecs.writeFloatCorrect(slice_duration);
+
+		ecs.writeFloatCorrect(toffset);
+		
+		ecs.writeIntCorrect(glmax);
+		ecs.writeIntCorrect(glmin);
+
+		ecs.write(setStringSize(descrip,80),0,80);
+		ecs.write(setStringSize(aux_file,24),0,24);
+
+
+		ecs.writeShortCorrect(qform_code);
+		ecs.writeShortCorrect(sform_code);
+
+		for (i=0; i<3; i++)
+			ecs.writeFloatCorrect(quatern[i]);
+		for (i=0; i<3; i++)
+			ecs.writeFloatCorrect(qoffset[i]);
+
+		for (i=0; i<4; i++)
+			ecs.writeFloatCorrect(srow_x[i]);
+		for (i=0; i<4; i++)
+			ecs.writeFloatCorrect(srow_y[i]);
+		for (i=0; i<4; i++)
+			ecs.writeFloatCorrect(srow_z[i]);
+
+
+		ecs.write(setStringSize(intent_name,16),0,16);
+		ecs.write(setStringSize(magic,4),0,4);
+
+		// nii or anz/hdr w/ ext. gets 4 more
+		if ( (ds_is_nii) || (extension[0] != 0) ) {
+			for (i=0; i<4; i++)
+				ecs.writeByte((int)extension[i]);
+		}
+
+		/** write the header blob to disk */
+		baos.writeTo(fsout);
+		
+		}
+		catch (IOException ex) {
+			throw new IOException("Error: unable to write header file "+ds_hdrname+": "+ex.getMessage());
+		}
+
+
+
+		/** write the extension blobs **/
+		try {
+
+		////// extensions
+		if (extension[0] != 0) {
+
+			baos = new ByteArrayOutputStream(EXT_KEY_SIZE);
+			ecs = new EndianCorrectOutputStream(baos,big_endian);
+			extlist = getExtensionsList();
+			n = extlist.length;
+			for(i=0; i<n; i++) {
+				// write size, code
+				ecs.writeIntCorrect(extlist[i][0]);
+				ecs.writeIntCorrect(extlist[i][1]);
+				baos.writeTo(fsout);
+				baos.reset();
+
+				// write data blob
+				ext_blob = (byte[]) extension_blobs.get(i);
+				fsout.write(ext_blob,0,extlist[i][0]-EXT_KEY_SIZE);
+			}
+		}
+
+//		fos.close();
+		}
+
+		catch (IOException ex) {
+			throw new IOException("Error: unable to write header extensions for file "+ds_hdrname+": "+ex.getMessage());
+		}
 	}
 
 
@@ -2387,11 +2707,10 @@ public class Nifti1Dataset {
 
 		return b;
 	}
-
-	public byte[] readData(InputStream ip) throws IOException {
+	
+	public byte[] readDataV2(InputStream ip) throws IOException {
 
 		int i;
-		byte b[];
 		DataInputStream dis;
 		long skip_head,blob_size;
 
@@ -2405,17 +2724,16 @@ public class Nifti1Dataset {
 		if (blob_size > Integer.MAX_VALUE)
 			throw new IOException("\nSorry, cannot yet handle data arrays bigger than "+Integer.MAX_VALUE+" bytes.  "+ds_datname+" has "+blob_size+" bytes.");
 
-		b = new byte[(int)blob_size];
+		myData = new byte[(int)blob_size];
 
 		skip_head=(long)vox_offset;
 		
 		dis = new DataInputStream(ip);
 
 		dis.skipBytes((int)skip_head);
-		dis.readFully(b,0,(int)blob_size);
-		dis.close();
+		dis.readFully(myData,0,(int)blob_size);
+		return myData;
 
-		return b;
 	}
 
 
@@ -2451,6 +2769,13 @@ public class Nifti1Dataset {
 	raf.close();
 
 	return;
+	}
+	
+	public void writeData(DataOutputStream out) throws IOException {
+
+		out.write(myData,0,myData.length);
+
+		return;
 	}
 
 	//////////////////////////////////////////////////////////////////

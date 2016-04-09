@@ -1,10 +1,9 @@
 package org.hipi.tools;
 
 import org.hipi.image.HipiImageHeader;
-import org.hipi.image.ByteImage;
-import org.hipi.image.io.JpegCodec;
+import org.hipi.image.NiftiImage;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
-
+import org.myhipi.nifti.Nifti1Dataset;
 import org.apache.commons.io.FilenameUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -25,7 +24,7 @@ import java.io.IOException;
 
 public class HibToNifti extends Configured implements Tool {
 
-  public static class HibToJpegMapper extends Mapper<HipiImageHeader, ByteImage, BooleanWritable, Text> {
+  public static class HibToNiftiMapper extends Mapper<HipiImageHeader, NiftiImage, BooleanWritable, Text> {
 
     public Path path;
     public FileSystem fileSystem;
@@ -44,7 +43,7 @@ public class HibToNifti extends Configured implements Tool {
      * filename.
      */
     @Override
-    public void map(HipiImageHeader header, ByteImage image, Context context) throws IOException, InterruptedException {
+    public void map(HipiImageHeader header, NiftiImage image, Context context) throws IOException, InterruptedException {
 
       // Check for null image (malformed HIB segment of failure to decode header)
       if (header == null || image == null) {
@@ -68,7 +67,9 @@ public class HibToNifti extends Configured implements Tool {
 
       // Write image file to HDFS
       FSDataOutputStream os = fileSystem.create(outpath);
-      JpegCodec.getInstance().encodeImage(image, os);
+      Nifti1Dataset nii = image.getNifti();
+      nii.writeHeader(os);
+      nii.writeData(os);
       os.flush();
       os.close();
 
@@ -89,7 +90,7 @@ public class HibToNifti extends Configured implements Tool {
 
     // Check arguments
     if (args.length != 2) {
-      System.out.println("Usage: hibToJpeg.jar <input HIB> <output directory>");
+      System.out.println("Usage: hibToNIfti.jar <input HIB> <output directory>");
       System.exit(0);
     }
 
@@ -103,7 +104,7 @@ public class HibToNifti extends Configured implements Tool {
     // Setup MapReduce classes
     Job job = Job.getInstance(conf, "jpegfromhib");
     job.setJarByClass(HibToNifti.class);
-    job.setMapperClass(HibToJpegMapper.class);
+    job.setMapperClass(HibToNiftiMapper.class);
     job.setReducerClass(Reducer.class);
     job.setOutputKeyClass(BooleanWritable.class);
     job.setOutputValueClass(Text.class);

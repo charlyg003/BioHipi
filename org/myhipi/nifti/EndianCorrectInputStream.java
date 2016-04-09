@@ -29,10 +29,13 @@ public class EndianCorrectInputStream extends DataInputStream {
      */
     public EndianCorrectInputStream(InputStream is, boolean be)  {
 	super(is);
+//	super.mark(Integer.MAX_VALUE);
 	bigendian = be;
     }
 
-
+//    public void reset() throws IOException{
+//    	super.reset();
+//    }
 
     /**
      *  readShortCorrect will return a short from the stream

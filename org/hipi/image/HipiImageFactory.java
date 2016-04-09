@@ -62,6 +62,9 @@ public class HipiImageFactory {
 	case BYTE:
 	  imageClass = ByteImage.class;
 	  break;
+	case NIFTI:
+		imageClass = NiftiImage.class;
+		break;
 	case RAW:
     imageClass = RawImage.class;
 	case UNDEFINED:
