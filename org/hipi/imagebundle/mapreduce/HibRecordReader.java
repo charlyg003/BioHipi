@@ -29,7 +29,7 @@ public class HibRecordReader extends RecordReader<HipiImageHeader, HipiImage> {
   private HipiImageBundle.HibReader reader;
 
   @SuppressWarnings("unchecked")
-@Override
+  @Override
   public void initialize(InputSplit split, TaskAttemptContext context) 
   throws IOException, IllegalArgumentException {
 

@@ -256,7 +256,9 @@ public class Nifti1Dataset {
 	public StringBuffer	magic;		// 4 char id must be "ni1\0" or "n+1\0"
 	public byte		extension[];	// 4 byte array, byte 0 is 0/1 indicating extensions or not
 	public byte myData[];
+	public byte myData2[];
 
+	public double[][][] matrixData;
 
 
 	//////////////////////////////////////////////////////////////////
@@ -592,8 +594,9 @@ public class Nifti1Dataset {
 		int blob_size = XDIM*YDIM*ZZZ*bytesPerVoxel(datatype);
 		myData = new byte[(int)blob_size];
 		dis.readFully(myData,0,(int)blob_size);
-
-		
+		myData2 = new byte[(int)blob_size];
+		for(i=0; i<myData2.length; i++)
+			myData2[i] = myData[i];
 		//		}
 		//		catch (IOException ex) {
 		//			throw new IOException("Error: unable to read header file "+ds_hdrname+": "+ex.getMessage());
@@ -605,10 +608,9 @@ public class Nifti1Dataset {
 			readNiiExt(ecs);
 		else
 			readNp1Ext(ecs);
-
 //		dis.reset();
 //		ecs.close();
-
+//		matrixData = readDoubleVol((short)0);
 		return;	
 	}
 	
@@ -1381,6 +1383,7 @@ public class Nifti1Dataset {
 		}
 
 		/** write the header blob to disk */
+		ecs.close();
 		baos.writeTo(fsout);
 		
 		}
@@ -2328,103 +2331,105 @@ public class Nifti1Dataset {
 	@SuppressWarnings("resource")
 	public double[][][] readDoubleVol(short ttt) throws IOException {
 
-	double data[][][];
-	byte b[];
-	EndianCorrectInputStream ecs;
-	short ZZZ;
-	int i,j,k;
-	
-
-	// for 2D volumes, zdim may be 0
-	ZZZ = ZDIM;
-	if (dim[0] == 2)
-		ZZZ = 1;
+		double data[][][];
+		byte b[];
+		EndianCorrectInputStream ecs;
+		short ZZZ;
+		int i,j,k;
 
 
-	// allocate 3D array
-	data = new double[ZZZ][YDIM][XDIM];
+		// for 2D volumes, zdim may be 0
+		ZZZ = ZDIM;
+		if (dim[0] == 2)
+			ZZZ = 1;
 
-	// read bytes from disk
-	b = readVolBlob(ttt);
 
-	// read the correct datatypes from the byte array
-	// undo signs if necessary, add scaling
-	ecs = new EndianCorrectInputStream(new ByteArrayInputStream(b),big_endian);
-	switch (datatype) {
+		// allocate 3D array
+		data = new double[ZZZ][YDIM][XDIM];
+
+		// read bytes from disk
+
+		// read the correct datatypes from the byte array
+		// undo signs if necessary, add scaling
+		b = new byte[myData.length];
+		for (int ww=0; ww<myData.length; ww++)
+			b[ww] = myData[ww];
+		ecs = new EndianCorrectInputStream(new ByteArrayInputStream(myData),big_endian);
+		switch (datatype) {
 
 		case NIFTI_TYPE_INT8:
 		case NIFTI_TYPE_UINT8:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readByte());
-				if ((datatype == NIFTI_TYPE_UINT8) && (data[k][j][i] < 0) )
-					data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<7);
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readByte());
+						if ((datatype == NIFTI_TYPE_UINT8) && (data[k][j][i] < 0) )
+							data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<7);
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 		case NIFTI_TYPE_INT16:
 		case NIFTI_TYPE_UINT16:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readShortCorrect());
-				if ((datatype == NIFTI_TYPE_UINT16) && (data[k][j][i] < 0))
-					data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<15);
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readShortCorrect());
+						if ((datatype == NIFTI_TYPE_UINT16) && (data[k][j][i] < 0))
+							data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<15);
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 		case NIFTI_TYPE_INT32:
 		case NIFTI_TYPE_UINT32:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readIntCorrect());
-				if ( (datatype == NIFTI_TYPE_UINT32) && (data[k][j][i] < 0) )
-					data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<31);
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readIntCorrect());
+						if ( (datatype == NIFTI_TYPE_UINT32) && (data[k][j][i] < 0) )
+							data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<31);
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 
 		case NIFTI_TYPE_INT64:
 		case NIFTI_TYPE_UINT64:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readLongCorrect());
-				if ( (datatype == NIFTI_TYPE_UINT64) && (data[k][j][i] < 0) )
-					data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<63);
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readLongCorrect());
+						if ( (datatype == NIFTI_TYPE_UINT64) && (data[k][j][i] < 0) )
+							data[k][j][i] = Math.abs(data[k][j][i]) + (double)(1<<63);
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 
 		case NIFTI_TYPE_FLOAT32:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readFloatCorrect());
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readFloatCorrect());
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 
 		case NIFTI_TYPE_FLOAT64:
 			for (k=0; k<ZZZ; k++)
-			for (j=0; j<YDIM; j++)
-			for (i=0; i<XDIM; i++) {
-				data[k][j][i] = (double) (ecs.readDoubleCorrect());
-				if (scl_slope != 0)
-					data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
-			}
+				for (j=0; j<YDIM; j++)
+					for (i=0; i<XDIM; i++) {
+						data[k][j][i] = (double) (ecs.readDoubleCorrect());
+						if (scl_slope != 0)
+							data[k][j][i] = data[k][j][i] * scl_slope + scl_inter;
+					}
 			break;
 
 
@@ -2440,11 +2445,10 @@ public class Nifti1Dataset {
 			throw new IOException("Sorry, cannot yet read nifti-1 datatype "+decodeDatatype(datatype));
 		}
 
-	ecs.close();
-	b = null;
+		ecs.close();
 
 
-	return(data);
+		return(data);
 	}
 
 
@@ -2576,7 +2580,6 @@ public class Nifti1Dataset {
 	private byte[] readVolBlob(short ttt) throws IOException {
 
 	byte b[];
-	RandomAccessFile raf;
 	GZIPInputStream gis;
 	BufferedInputStream bis;
 	short ZZZ;
@@ -2608,8 +2611,7 @@ public class Nifti1Dataset {
 	}
 	// read uncompressed data with RandomAccessFile
 	else {
-	raf = new RandomAccessFile(ds_datname, "r");
-	raf.seek(skip_head+skip_data);
+	DataInputStream raf = new DataInputStream(new ByteArrayInputStream(myData));
 	raf.readFully(b,0,blob_size);
 	raf.close();
 	}

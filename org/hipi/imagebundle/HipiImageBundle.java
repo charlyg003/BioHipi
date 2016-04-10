@@ -174,7 +174,6 @@ public class HipiImageBundle {
      * @return true if the next image record (header + pixel data) was successfully read and decoded. False if there are no more images or if an error occurs.
      */
     public boolean nextKeyValue() {
-    	
       try {
     	 
         // Reset state of current key/value
@@ -182,11 +181,11 @@ public class HipiImageBundle {
         imageBytes = null;
         imageHeader = null;
         image = null;
-        System.out.println("CURRENT OFFSET: " + currentOffset + " END " + endOffset);
         // A value of endOffset = 0 indicates "read to the end of
         // file", otherwise check segment boundary
-        if (endOffset > 0 && currentOffset >= endOffset) {
+        if (endOffset > 0 && currentOffset > endOffset) {
           // Already past end of file segment
+        	System.out.println("USCITO");
           return false;
         }
 
@@ -239,11 +238,11 @@ public class HipiImageBundle {
 //        }
 
 
-        System.out.println("nextKeyValue()");
-        System.out.println("imageHeaderLength: " + imageHeaderLength);
-        System.out.println("imageLength: " + imageLength);
-        System.out.println("imageFormatInt: " + imageFormatInt);
-        System.out.println("imageFormat: " + imageFormat.toInteger());
+//        System.out.println("nextKeyValue()");
+//        System.out.println("imageHeaderLength: " + imageHeaderLength);
+//        System.out.println("imageLength: " + imageLength);
+//        System.out.println("imageFormatInt: " + imageFormatInt);
+//        System.out.println("imageFormat: " + imageFormat.toInteger());
          
 
         // Allocate byte array to hold image header data
@@ -257,14 +256,13 @@ public class HipiImageBundle {
         // with currentOffset.
         dataInputStream.readFully(imageHeaderBytes);        
         dataInputStream.readFully(imageBytes);        
-
         // Advance byte offset by length of 12-byte signature plus
         // image header length plus image pixel data length
         currentOffset += 12 + imageHeaderLength + imageLength;
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(imageHeaderBytes));
     	imageHeader = new HipiImageHeader(dis);
-//    	System.out.println("HeadInfo: " + imageHeader.getHeight() + " " + imageHeader.getWidth() + " " + imageHeader.getNumBands());
-//    	System.out.println("MetaInfo: " + imageHeader.getAllMetaData());
+    	System.out.println("HeadInfo: " + imageHeader.getHeight() + " " + imageHeader.getWidth() + " " + imageHeader.getNumBands());
+    	System.out.println("MetaInfo: " + imageHeader.getAllMetaData());
     	DataInputStream imageDataStream = new DataInputStream(new ByteArrayInputStream(imageBytes));
         // Call appropriate decode function based on type of image object
         switch (imageFactory.getType()) {
