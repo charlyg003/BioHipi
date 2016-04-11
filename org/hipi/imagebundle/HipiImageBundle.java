@@ -63,7 +63,7 @@ public class HipiImageBundle {
     private HipiImageFactory imageFactory;
 
     // Class responsible for handling image culling
-    private Culler culler = null;
+//    private Culler culler = null;
     
     // Input stream connected to HIB data file
     private DataInputStream dataInputStream = null;
@@ -104,15 +104,15 @@ public class HipiImageBundle {
       this.imageFactory = imageFactory;
 
       // Create image culler object if requested
-      if (cullerClass != null) {
-        try {
-          this.culler = (Culler)cullerClass.newInstance();
-        } catch (Exception e) {
-          System.err.println("Fatal error while attempting to instantiate image culler: " + cullerClass.getName());
-          System.err.println(e.getLocalizedMessage());
-          System.exit(1);
-        }
-      }
+//      if (cullerClass != null) {
+//        try {
+//          this.culler = (Culler)cullerClass.newInstance();
+//        } catch (Exception e) {
+//          System.err.println("Fatal error while attempting to instantiate image culler: " + cullerClass.getName());
+//          System.err.println(e.getLocalizedMessage());
+//          System.exit(1);
+//        }
+//      }
       
       // Create input stream for HIB data file
       dataInputStream = new DataInputStream(fs.open(path));
@@ -227,7 +227,7 @@ public class HipiImageBundle {
         }
 
         // Parse and validate image format
-        int imageFormatInt = ((sig[8] & 0xff) << 24) | ((sig[9] & 0xff) << 16) | ((sig[10] & 0xff) << 8) | (sig[11] & 0xff);
+//        int imageFormatInt = ((sig[8] & 0xff) << 24) | ((sig[9] & 0xff) << 16) | ((sig[10] & 0xff) << 8) | (sig[11] & 0xff);
 //        try {
 //          imageFormat = HipiImageFormat.fromInteger(imageFormatInt);
 //        } catch (IllegalArgumentException e) {

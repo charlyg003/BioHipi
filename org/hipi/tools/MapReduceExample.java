@@ -63,10 +63,6 @@ public class MapReduceExample extends Configured implements Tool {
         return;
       }
 
-//      Path outpath = new Path(path + "/" + base + ".nii");
-
-      // Write image file to HDFS
-//      FSDataOutputStream os = fileSystem.create(outpath);
       Nifti1Dataset nii = image.getNifti();
       MatrixReconstruction.dataReconstruction(nii);
       double[][][] data = nii.readDoubleVol((short)0);
@@ -141,9 +137,6 @@ public class MapReduceExample extends Configured implements Tool {
     job.setOutputValueClass(Double.class);
     
     job.setNumReduceTasks(10);
-
-    // Clean up output directory
-//    removeDir(outputPath, conf);
 
     FileOutputFormat.setOutputPath(job, new Path(outputPath));
     HibInputFormat.setInputPaths(job, new Path(inputPath));

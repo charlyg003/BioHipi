@@ -23,7 +23,8 @@ public class ByteUtils {
    *
    * @param stream
    */
-  public static byte[] inputStreamToByteArray(InputStream stream) throws IOException {
+  @SuppressWarnings("unused")
+public static byte[] inputStreamToByteArray(InputStream stream) throws IOException {
     if (stream == null) {
       return new byte[] {};
     }
