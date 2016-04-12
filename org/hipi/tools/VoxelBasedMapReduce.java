@@ -4,6 +4,7 @@ import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
 import org.hipi.niftijio.NiftiVolume;
+import org.hipi.util.MultipleLinearRegression;
 import org.apache.commons.io.FilenameUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -21,7 +22,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-public class MapReduceExample extends Configured implements Tool {
+public class VoxelBasedMapReduce extends Configured implements Tool {
 
   public static class VoxelMapper extends Mapper<HipiImageHeader, NiftiImage, Text, DoubleWritable> {
 
@@ -62,18 +63,13 @@ public class MapReduceExample extends Configured implements Tool {
         return;
       }
 
-//      Nifti1Dataset nii = image.getNifti();
-//      MatrixReconstruction.dataReconstruction(nii);
-//      double[][][] data = nii.readDoubleVol((short)0);
-      
       NiftiVolume nii = image.getNifti();
       double[][][][] data = nii.data;
-      
       
       for(int i=120-10; i<120+10; i++){
     	  for(int j=120-10; j<120+10; j++){
     		  for(int k=120-10; k<120+10; k++){
-    			  double val = data[k][j][i][0];
+    			  double val = data[i][j][k][0];
     		      Text text = new Text(Integer.toString(i) + " " + Integer.toString(j) + " " + Integer.toString(k));
     		      DoubleWritable dwritable = new DoubleWritable(val);
     		      context.write(text,dwritable);
@@ -88,10 +84,21 @@ public class MapReduceExample extends Configured implements Tool {
 	  @Override
 	  public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException{
 		  double maxValue = Double.MIN_VALUE;
+		  int size = 0;
 		  for(DoubleWritable currD : values){
-			  if(currD.get() > maxValue)
-				  maxValue = currD.get();
+				  currD.get();
+				  size++;
 		  }
+		  
+		  double[] y = new double[size];
+		  double[][] x = new double[size][2];
+		  
+		  size = 0;
+		  for(DoubleWritable currD : values){
+			  y[size] = currD.get();
+			  size++;
+		  }
+		  MultipleLinearRegression mlr = new MultipleLinearRegression(x, y);
 		  context.write(key, maxValue);
 	  }
 	  
@@ -124,7 +131,7 @@ public class MapReduceExample extends Configured implements Tool {
     
     // Setup MapReduce classes
     Job job = Job.getInstance(conf, "mapReduceExample");
-    job.setJarByClass(MapReduceExample.class);
+    job.setJarByClass(VoxelBasedMapReduce.class);
     job.setMapperClass(VoxelMapper.class);
     job.setReducerClass(VoxelReduced.class);
     
@@ -148,7 +155,7 @@ public class MapReduceExample extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new MapReduceExample(), args);
+    int res = ToolRunner.run(new VoxelBasedMapReduce(), args);
     System.exit(res);
   }
 

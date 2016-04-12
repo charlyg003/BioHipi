@@ -3,7 +3,7 @@ package org.hipi.tools;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
-import org.myhipi.nifti.Nifti1Dataset;
+import org.hipi.niftijio.NiftiVolume;
 import org.apache.commons.io.FilenameUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -67,9 +67,11 @@ public class HibToNifti extends Configured implements Tool {
 
       // Write image file to HDFS
       FSDataOutputStream os = fileSystem.create(outpath);
-      Nifti1Dataset nii = image.getNifti();
-      nii.writeHeader(os);
-      nii.writeData(os);
+//      Nifti1Dataset nii = image.getNifti();
+//      nii.writeHeader(os);
+//      nii.writeData(os);
+      NiftiVolume nii = image.getNifti();
+      nii.write(os);
       os.flush();
       os.close();
 

@@ -7,6 +7,7 @@ import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageFactory;
 import org.hipi.mapreduce.Culler;
+import org.hipi.niftijio.NiftiHeader;
 import org.hipi.util.ByteUtils;
 import org.myhipi.nifti.Nifti1Dataset;
 import org.apache.hadoop.conf.Configuration;
@@ -494,7 +495,7 @@ public class HipiImageBundle {
    *
    * @throws IOException in the event of any I/O errors or if the HIB is not currently in a state that supports adding new images
    */
-  public void addImage(HipiImageHeader imageHeader, InputStream imageStream, Nifti1Dataset nii, int imageLength, byte imageBytes[]) throws IOException {
+  public void addImage(HipiImageHeader imageHeader, InputStream imageStream, int imageLength, byte imageBytes[]) throws IOException {
 
     if (fileMode != FILE_MODE_WRITE) {
       throw new IOException("HIB [" + indexFilePath.getName() + "] is not opened for writing. Must successfully open HIB for writing before calling this method.");
@@ -574,13 +575,16 @@ public class HipiImageBundle {
     int imageLength = imageBytes.length;
     bufferedInputStream.close();
     inputStream = new BufferedInputStream(new ByteArrayInputStream(imageBytes));
-    Nifti1Dataset nii = new Nifti1Dataset();
-    nii.readHeader(inputStream);
-    HipiImageHeader header = new HipiImageHeader(HipiImageFormat.NIFTI, HipiColorSpace.LUM, nii.XDIM, nii.YDIM, nii.ZDIM, null, null);
+    //Nifti1Dataset nii = new Nifti1Dataset();
+    //nii.readHeader(inputStream);
+    NiftiHeader niiHd = new NiftiHeader();
+    niiHd = NiftiHeader.readFromStream(inputStream);
+//    HipiImageHeader header = new HipiImageHeader(HipiImageFormat.NIFTI, HipiColorSpace.LUM, nii.XDIM, nii.YDIM, nii.ZDIM, null, null);
+    HipiImageHeader header = new HipiImageHeader(HipiImageFormat.NIFTI, HipiColorSpace.LUM, niiHd.dim[1], niiHd.dim[2], niiHd.dim[3], null, null);
     if (metaData != null) {
     	header.setMetaData(metaData);
     }
-    addImage(header, bufferedInputStream, nii, imageLength, imageBytes);
+    addImage(header, bufferedInputStream, imageLength, imageBytes);
   }
 
   public void addImage(InputStream inputStream, HipiImageFormat imageFormat) throws IllegalArgumentException, IOException {
