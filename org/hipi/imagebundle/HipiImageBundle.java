@@ -9,7 +9,6 @@ import org.hipi.image.HipiImageFactory;
 import org.hipi.mapreduce.Culler;
 import org.hipi.niftijio.NiftiHeader;
 import org.hipi.util.ByteUtils;
-import org.myhipi.nifti.Nifti1Dataset;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
