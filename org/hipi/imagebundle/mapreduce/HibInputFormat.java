@@ -120,7 +120,7 @@ public class HibInputFormat extends FileInputFormat<HipiImageHeader, HipiImage> 
 	  splits.add(new FileSplit(hib.getDataFileStatus().getPath(), lastOffset, currentOffset - lastOffset, hosts));
 	  lastOffset = currentOffset;
 	}
-	System.out.println("Spawned " + b + "map tasks");
+	System.out.println("Spawned " + b + " map tasks");
       } else {
 	// User specified number of map tasks
 	int imageRemaining = offsets.size();

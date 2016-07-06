@@ -1,4 +1,4 @@
-package org.hipi.tools;
+package org.hipi.test;
 
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;
@@ -66,7 +66,7 @@ public class MapReduceExample extends Configured implements Tool {
 //      MatrixReconstruction.dataReconstruction(nii);
 //      double[][][] data = nii.readDoubleVol((short)0);
       
-      NiftiVolume nii = image.getNifti();
+      NiftiVolume nii = image.getNiftiVolume();
       double[][][][] data = nii.data;
       
       

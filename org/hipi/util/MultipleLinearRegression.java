@@ -13,7 +13,7 @@ public class MultipleLinearRegression {
     public MultipleLinearRegression(double[][] x, double[] y) {
         if (x.length != y.length) throw new RuntimeException("dimensions don't agree");
         N = y.length;
-        p = x[0].length;
+        setP(x[0].length);
 
         Matrix X = new Matrix(x);
 
@@ -50,6 +50,14 @@ public class MultipleLinearRegression {
     public double R2() {
         return 1.0 - SSE/SST;
     }
+
+	public int getP() {
+		return p;
+	}
+
+	public void setP(int p) {
+		this.p = p;
+	}
 
 //    public static void main(String[] args) {
 //        double[][] x = { {  1,  10,  20 },

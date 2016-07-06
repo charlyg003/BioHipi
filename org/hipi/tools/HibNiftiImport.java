@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Arrays;
 
-@SuppressWarnings("deprecation")
 public class HibNiftiImport {
 
   private static final Options options = new Options();
@@ -100,7 +99,6 @@ public class HibNiftiImport {
     	  String suffix = fileName.substring(fileName.lastIndexOf('.'));
     	  System.out.println(suffix);
     	  if (suffix.compareTo(".nii") == 0) {
-    		  System.out.println("SUCA");
     		  hib.addImage(fdis, HipiImageFormat.NIFTI, metaData);
     		  System.out.println(" ** added: " + fileName);
     	  }

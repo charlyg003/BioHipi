@@ -1,9 +1,10 @@
 package org.hipi.tools;
 
 import org.hipi.image.HipiImageHeader;
-import org.hipi.image.NiftiImage;
-import org.hipi.image.io.NiftiCodec;
+import org.hipi.image.ByteImage;
+import org.hipi.image.io.JpegCodec;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
+
 import org.apache.commons.io.FilenameUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -22,9 +23,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
-public class HibToNifti extends Configured implements Tool {
+public class HibToJpeg extends Configured implements Tool {
 
-  public static class HibToNiftiMapper extends Mapper<HipiImageHeader, NiftiImage, BooleanWritable, Text> {
+  public static class HibToJpegMapper extends Mapper<HipiImageHeader, ByteImage, BooleanWritable, Text> {
 
     public Path path;
     public FileSystem fileSystem;
@@ -43,7 +44,7 @@ public class HibToNifti extends Configured implements Tool {
      * filename.
      */
     @Override
-    public void map(HipiImageHeader header, NiftiImage image, Context context) throws IOException, InterruptedException {
+    public void map(HipiImageHeader header, ByteImage image, Context context) throws IOException, InterruptedException {
 
       // Check for null image (malformed HIB segment of failure to decode header)
       if (header == null || image == null) {
@@ -63,14 +64,11 @@ public class HibToNifti extends Configured implements Tool {
         return;
       }
 
-      Path outpath = new Path(path + "/" + base + ".nii");
+      Path outpath = new Path(path + "/" + base + ".jpg");
 
       // Write image file to HDFS
       FSDataOutputStream os = fileSystem.create(outpath);
-//      NiftiVolume nii = image.getNifti();
-//      nii.write(os);
-      
-      NiftiCodec.getInstance().encodeImage(image, os);
+      JpegCodec.getInstance().encodeImage(image, os);
       os.flush();
       os.close();
 
@@ -91,7 +89,7 @@ public class HibToNifti extends Configured implements Tool {
 
     // Check arguments
     if (args.length != 2) {
-      System.out.println("Usage: hibToNIfti.jar <input HIB> <output directory>");
+      System.out.println("Usage: hibToJpeg.jar <input HIB> <output directory>");
       System.exit(0);
     }
 
@@ -104,8 +102,8 @@ public class HibToNifti extends Configured implements Tool {
 
     // Setup MapReduce classes
     Job job = Job.getInstance(conf, "jpegfromhib");
-    job.setJarByClass(HibToNifti.class);
-    job.setMapperClass(HibToNiftiMapper.class);
+    job.setJarByClass(HibToJpeg.class);
+    job.setMapperClass(HibToJpegMapper.class);
     job.setReducerClass(Reducer.class);
     job.setOutputKeyClass(BooleanWritable.class);
     job.setOutputValueClass(Text.class);
@@ -123,7 +121,7 @@ public class HibToNifti extends Configured implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new HibToNifti(), args);
+    int res = ToolRunner.run(new HibToJpeg(), args);
     System.exit(res);
   }
 
