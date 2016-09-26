@@ -63,27 +63,19 @@ public class NiftiImage extends HipiImage {
 		return out;
 	}
 
-	public String toString() {
-
-		return "NiftiVolume data: "+niiVol.data[0][0][0][0];
-	}
-
+	public String toString() { return "NiftiVolume data: "+niiVol.data[0][0][0][0]; }
 
 
 	@Override
 	public void write(DataOutput output) throws IOException {
-		System.out.println("******************** WRITE START ********************");
 		header.write(output);
 		niiVol.write((OutputStream)output);
-		System.out.println("******************** WRITE END ********************");
 	}
 
 	@Override
 	public void readFields(DataInput input) throws IOException {
-		System.out.println("******************** READ START ********************");
 		header = new HipiImageHeader(input);
 		this.niiVol = NiftiVolume.readStream((InputStream)input);
-		System.out.println("******************** READ END ********************");
 	}
 
 	@Override

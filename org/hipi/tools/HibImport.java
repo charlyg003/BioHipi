@@ -106,6 +106,9 @@ public class HibImport {
 				} else if (suffix.compareTo(".nii") == 0) {
 					hib.addImage(fdis, HipiImageFormat.NIFTI, metaData);
 					System.out.println(" ** added: " + fileName);
+				} else if (suffix.compareTo(".dcm") == 0) {
+					hib.addImage(fdis, HipiImageFormat.DICOM, metaData);
+					System.out.println(" ** added: " + fileName);
 				}
 			}
 
@@ -140,6 +143,9 @@ public class HibImport {
 					System.out.println(" ** added: " + fileName);
 				} else if (suffix.compareTo(".nii") == 0) {
 					hib.addImage(fis, HipiImageFormat.NIFTI, metaData);
+					System.out.println(" ** added: " + fileName);
+				} else if (suffix.compareTo(".dcm") == 0) {
+					hib.addImage(fis, HipiImageFormat.DICOM, metaData);
 					System.out.println(" ** added: " + fileName);
 				}
 			}

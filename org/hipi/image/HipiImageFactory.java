@@ -21,19 +21,11 @@ import java.lang.reflect.Method;
  */
 public class HipiImageFactory {
 
-	private static final HipiImageFactory staticFloatImageFactory = 
-			new HipiImageFactory(HipiImageType.FLOAT);
+	private static final HipiImageFactory staticFloatImageFactory = new HipiImageFactory(HipiImageType.FLOAT);
+	private static final HipiImageFactory staticByteImageFactory =  new HipiImageFactory(HipiImageType.BYTE);
 
-	public static HipiImageFactory getFloatImageFactory() {
-		return staticFloatImageFactory;
-	}
-
-	private static final HipiImageFactory staticByteImageFactory = 
-			new HipiImageFactory(HipiImageType.BYTE);
-
-	public static HipiImageFactory getByteImageFactory() {
-		return staticByteImageFactory;
-	}
+	public static HipiImageFactory getFloatImageFactory() { return staticFloatImageFactory; }
+	public static HipiImageFactory getByteImageFactory()  { return staticByteImageFactory; }
 
 	private Class<?> imageClass = null;
 	private HipiImageType imageType = HipiImageType.UNDEFINED;
@@ -60,13 +52,14 @@ public class HipiImageFactory {
 			imageClass = FloatImage.class;
 			break;
 		case BYTE:
-			imageClass = ByteImage.class;
-			break;
 		case RAW:
 			imageClass = ByteImage.class;
 			break;
 		case NIFTI:
 			imageClass = NiftiImage.class;
+			break;
+		case DICOM:
+			imageClass = DicomImage.class;
 			break;
 		case RDA:
 			throw new RuntimeException("Support for RDA image type not yet implemented.");

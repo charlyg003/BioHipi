@@ -32,6 +32,8 @@ public final class CodecManager {
 			return PngCodec.getInstance();
 		case NIFTI:
 			return NiftiCodec.getInstance();
+		case DICOM:
+			return DicomCodec.getInstance();
 		case RDA:
 			return RdaCodec.getInstance();
 		default:
@@ -59,6 +61,8 @@ public final class CodecManager {
 			return PngCodec.getInstance();
 		case NIFTI:
 			return NiftiCodec.getInstance();
+		case DICOM:
+			return DicomCodec.getInstance();
 		case RDA:
 			return RdaCodec.getInstance();
 		default:

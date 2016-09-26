@@ -19,7 +19,7 @@ public abstract class HipiImage implements Writable {
 	 * Enumeration of the supported image object types in HIPI (e.g., FloatImage, ByteImage, NiftiImage etc.).
 	 */
 	public enum HipiImageType {
-		UNDEFINED(0x0), FLOAT(0x1), BYTE(0x2), RAW(0x3), NIFTI(0x3), RDA(0x4);
+		UNDEFINED(0x0), FLOAT(0x1), BYTE(0x2), RAW(0x3), NIFTI(0x4), DICOM(0x5), RDA(0x6);
 
 		private int type;
 

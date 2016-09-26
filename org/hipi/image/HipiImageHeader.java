@@ -29,7 +29,7 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 	 * Enumeration of the image storage formats supported in HIPI (e.g, JPEG, PNG, etc.).
 	 */
 	public enum HipiImageFormat {
-		UNDEFINED(0x0), JPEG(0x1), PNG(0x2), NIFTI(0x3), RDA(0x4);
+		UNDEFINED(0x0), JPEG(0x1), PNG(0x2), NIFTI(0x3), RDA(0x4), DICOM(0x5);
 
 		private int format;
 
@@ -139,6 +139,7 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 	private static final int JPEG_PNG_DIM = 4;
 	private static final int NIFTI_DIM = 4;
 	private static final int RDA_DIM = 1;
+	private static final int DICOM_DIM = 1;
 
 	public static final int JPEG_PNG_INDEX_COLOR_SPACE = 0;
 	public static final int JPEG_PNG_INDEX_WIDTH = 1;
@@ -151,6 +152,8 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 	public static final int NIFTI_INDEX_DIM_T = 3;
 
 	public static final int RDA_INDEX = 0;
+
+	public static final int DICOM_INDEX = 0;
 
 	/**
 	 * Format used to store image on HDFS
@@ -244,6 +247,23 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 		values[NIFTI_INDEX_DIM_Y] = dimY;
 		values[NIFTI_INDEX_DIM_Z] = dimZ;
 		values[NIFTI_INDEX_DIM_T] = dimT;
+
+	}
+
+	/**
+	 * Creates an ImageHeader for Dicom.
+	 */
+	public HipiImageHeader(HipiImageFormat storageFormat, byte[] metaDataBytes,  Map<String,String> exifData) {
+
+		this.storageFormat = storageFormat;
+
+		if (metaDataBytes != null)
+			setMetaDataFromBytes(metaDataBytes);
+
+		this.exifData = exifData;		
+
+		if (storageFormat != HipiImageFormat.DICOM)
+			throw new IllegalArgumentException(String.format("Invalid storage format (%s) for this constructor, only DICOM.", storageFormat.toString()));
 
 	}
 
@@ -510,6 +530,9 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 			out.writeInt(values[NIFTI_INDEX_DIM_T]);
 			break;
 
+		case DICOM:
+			break;
+
 		case RDA:
 			throw new RuntimeException("Support for RDA image type not yet implemented.");
 
@@ -560,6 +583,10 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 			values[NIFTI_INDEX_DIM_Y] = input.readInt();
 			values[NIFTI_INDEX_DIM_Z] = input.readInt();
 			values[NIFTI_INDEX_DIM_T] = input.readInt();
+			break;
+
+		case DICOM:
+			values = new int[DICOM_DIM];
 			break;
 
 		case RDA:

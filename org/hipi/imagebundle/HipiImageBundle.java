@@ -3,6 +3,7 @@ package org.hipi.imagebundle;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.RawImage;
 import org.hipi.image.io.CodecManager;
+import org.hipi.image.io.DicomCodec;
 import org.hipi.image.io.ImageDecoder;
 import org.hipi.image.io.JpegCodec;
 import org.hipi.image.io.NiftiCodec;
@@ -301,8 +302,10 @@ public class HipiImageBundle {
 				// Call appropriate decode function based on type of image
 				// object
 				switch (imageFactory.getType()) {
+				
 				case FLOAT:
 				case BYTE:
+					
 					try {
 						image = decoder.decodeImage(imageByteStream, imageHeader, imageFactory, true);
 					} catch (Exception e) {
@@ -315,7 +318,8 @@ public class HipiImageBundle {
 					break;
 
 				case NIFTI:
-
+				case DICOM:
+					
 					try {
 						image = decoder.decodeImage(imageByteStream, imageHeader, imageFactory, false);
 					} catch (Exception e) {
@@ -326,6 +330,9 @@ public class HipiImageBundle {
 						return nextKeyValue();
 					}
 					break;
+					
+				case RDA:
+					throw new RuntimeException("Support for RDA image type not yet implemented.");
 
 				case RAW:
 					try {
@@ -340,10 +347,7 @@ public class HipiImageBundle {
 						return nextKeyValue();
 					}
 					throw new RuntimeException("Support for RAW image type not yet implemented.");
-
-				case RDA:
-					throw new RuntimeException("Support for RDA image type not yet implemented.");
-
+					
 				case UNDEFINED:
 				default:
 					throw new IOException("Unexpected image type. Cannot proceed.");
@@ -636,6 +640,9 @@ public class HipiImageBundle {
 			break;
 		case NIFTI:
 			decoder = NiftiCodec.getInstance();
+			break;
+		case DICOM:
+			decoder = DicomCodec.getInstance();
 			break;
 		case RDA:
 		case UNDEFINED:

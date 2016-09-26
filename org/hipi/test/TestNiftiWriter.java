@@ -27,7 +27,7 @@ public class TestNiftiWriter extends Configured implements Tool {
         throws IOException, InterruptedException {
             
             // Verify that image was properly decoded, is of sufficient size, and has three color channels (RGB)
-            if (value != null && value.getNiftiVolume() != null) {
+            if (value.getNiftiVolume() != null) {
                 
                 NiftiVolume niiVol = NiftiImage.extractAPart(value.getNiftiVolume(), 120, 120, 120, 0, 140, 140, 140, 0);
                 HipiImageHeader imageHeader = new HipiImageHeader(HipiImageFormat.NIFTI, niiVol.header.dim[1], niiVol.header.dim[2], niiVol.header.dim[3], niiVol.header.dim[4], null, null);
@@ -46,7 +46,6 @@ public class TestNiftiWriter extends Configured implements Tool {
         
         public void reduce(IntWritable key, NiftiImage value, Context context)
         throws IOException, InterruptedException {
-
         	
                 context.write(key, new Text(value.toString()));
             
