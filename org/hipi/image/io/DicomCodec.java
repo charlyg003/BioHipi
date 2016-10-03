@@ -2,13 +2,17 @@ package org.hipi.image.io;
 
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
+import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.Tag;
+import org.dcm4che3.io.DicomInputStream;
 import org.dcm4che3.io.DicomOutputStream;
 import org.dcm4che3.util.SafeClose;
 import org.hipi.image.DicomImage;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageFactory;
 
-import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +35,7 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 		DicomOutputStream dos = null;
 		try {
 			dos = new DicomOutputStream(outputStream, ((DicomImage)image).getDicomInputStream().getTransferSyntax());
-			dos.writeDataset(((DicomImage)image).getFmi(), ((DicomImage)image).getDataset());
+			dos.writeDatasetWithFMI(((DicomImage)image).getDatasetWithFMI());
 		} finally {
 			SafeClose.close(dos);
 		}
@@ -40,9 +44,15 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 	@Override
 	public HipiImageHeader decodeHeader(InputStream inputStream, boolean includeExifData) throws IOException {
 		
-//		DicomInputStream dicomHdr = new DicomInputStream(inputStream);
+		DicomInputStream dis = new DicomInputStream(inputStream);
+		Attributes dataset = null;
+		try {
+			dataset = dis.readDataset(-1, -1);
+		} finally {
+			dis.close();
+		}
 		
-		return new HipiImageHeader(HipiImageFormat.DICOM, null, null);
+		return new HipiImageHeader(HipiImageFormat.DICOM, dataset.getString(Tag.PatientID), dataset.getString(Tag.PatientName), Integer.parseInt(dataset.getString(Tag.Rows)), Integer.parseInt(dataset.getString(Tag.Columns)),  null , null);
 	}
 
 	@Override
@@ -61,11 +71,17 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 	public HipiImage decodeHeaderAndImage(InputStream inputStream, HipiImageFactory imageFactory,
 			boolean includeExifData) throws IOException, IllegalArgumentException {
 
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-		bufferedInputStream.mark(Integer.MAX_VALUE);
-		HipiImageHeader header = decodeHeader(bufferedInputStream, includeExifData);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = inputStream.read(buffer)) > -1 )
+			baos.write(buffer, 0, len);
+		baos.flush();
 
-		bufferedInputStream.reset();
-		return decodeImage(bufferedInputStream, header, imageFactory, false);
+		InputStream ipForHeader = new ByteArrayInputStream(baos.toByteArray());
+		InputStream ipForImage  = new ByteArrayInputStream(baos.toByteArray());
+
+		HipiImageHeader header = decodeHeader(ipForHeader);
+		return decodeImage(ipForImage, header, imageFactory, false);
 	}
 }

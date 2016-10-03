@@ -46,7 +46,7 @@ public class RawImage extends HipiImage {
 	 * @return color space of image
 	 */
 	public HipiColorSpace getColorSpace() {
-		return HipiColorSpace.fromInteger(header.getValue(HipiImageHeader.JPEG_PNG_INDEX_COLOR_SPACE));
+		return HipiColorSpace.fromInteger((Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_COLOR_SPACE));
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class RawImage extends HipiImage {
 	 * @return width of image
 	 */
 	public int getWidth() {
-		return header.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH);
+		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH);
 	}
 
 	/**
@@ -64,7 +64,7 @@ public class RawImage extends HipiImage {
 	 * @return height of image
 	 */
 	public int getHeight() {
-		return header.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT);
+		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT);
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class RawImage extends HipiImage {
 	 * @return number of color bands in image
 	 */
 	public int getNumBands() {
-		return header.getValue(HipiImageHeader.JPEG_PNG_INDEX_BANDS);
+		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_BANDS);
 	}
 
 	/**

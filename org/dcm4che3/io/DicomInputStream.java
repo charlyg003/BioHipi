@@ -74,8 +74,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
-public class DicomInputStream extends FilterInputStream
-implements DicomInputHandler {
+public class DicomInputStream extends FilterInputStream implements DicomInputHandler {
 
 	public enum IncludeBulkData { NO, YES, URI }
 
@@ -480,15 +479,15 @@ implements DicomInputHandler {
 		return attrs;
 	}
 
-	public void readAttributes(Attributes attrs, int len, int stopTag)
-			throws IOException {
+	public void readAttributes(Attributes attrs, int len, int stopTag) throws IOException {
 		ItemPointer[] prevItemPointers = itemPointers;
 		itemPointers = attrs.itemPointers();
-		
+
 		boolean undeflen = len == -1;
 		boolean hasStopTag = stopTag != -1;
 		long endPos =  pos + (len & 0xffffffffL);
 		while (undeflen || this.pos < endPos) {
+
 			try {
 				readHeader();
 			} catch (EOFException e) {
@@ -508,6 +507,8 @@ implements DicomInputHandler {
 							explicitVR = false;
 						}
 						vr = ElementDictionary.vrOf(tag, attrs.getPrivateCreator(tag));
+
+
 						if (vr == VR.UN && length == -1)
 							vr = VR.SQ; // assumes UN with undefined length are SQ,
 						// will fail on UN fragments!
@@ -517,8 +518,9 @@ implements DicomInputHandler {
 					bigEndian = prevBigEndian;
 					explicitVR = prevExplicitVR;
 				}
-			} else
+			} else {
 				skipAttribute(UNEXPECTED_ATTRIBUTE);
+			}
 		}
 		itemPointers = prevItemPointers;
 	}
@@ -723,15 +725,15 @@ implements DicomInputHandler {
 			if (valLen < 0)
 				throw new EOFException(); // assume InputStream length < 2 GiB
 			int allocLen = allocateLimit >= 0 ? Math.min(valLen, allocateLimit) : valLen;
-					byte[] value = new byte[allocLen];
-					readFully(value, 0, allocLen);
-					while (allocLen < valLen) {
-						int newLength = Math.min(valLen, allocLen << 1);
-						value = Arrays.copyOf(value, newLength);
-						readFully(value, allocLen, newLength - allocLen);
-						allocLen = newLength;
-					}
-					return value;
+			byte[] value = new byte[allocLen];
+			readFully(value, 0, allocLen);
+			while (allocLen < valLen) {
+				int newLength = Math.min(valLen, allocLen << 1);
+				value = Arrays.copyOf(value, newLength);
+				readFully(value, allocLen, newLength - allocLen);
+				allocLen = newLength;
+			}
+			return value;
 		} catch (IOException e) {
 			LOG.warn("IOException during read of {} #{} @ {}",
 					TagUtils.toString(tag), length, tagPos, e);
@@ -771,8 +773,7 @@ implements DicomInputHandler {
 		int rlen = read(b128);
 		if (rlen == 128) {
 			read(buf, 0, 4);
-			if (buf[0] == 'D' && buf[1] == 'I'
-					&& buf[2] == 'C' && buf[3] == 'M') {
+			if (buf[0] == 'D' && buf[1] == 'I' && buf[2] == 'C' && buf[3] == 'M') {
 				preamble = b128.clone();
 				if (!markSupported()) {
 					hasfmi = true;
@@ -785,24 +786,19 @@ implements DicomInputHandler {
 				read(b128);
 			}
 		}
-		if (rlen < 8
-				|| !guessTransferSyntax(b128, rlen, false)
-				&& !guessTransferSyntax(b128, rlen, true))
+		if (rlen < 8 || !guessTransferSyntax(b128, rlen, false) && !guessTransferSyntax(b128, rlen, true))
 			throw new DicomStreamException(NOT_A_DICOM_STREAM);
 		reset();
-		hasfmi = TagUtils.isFileMetaInformation(
-				ByteUtils.bytesToTag(b128, 0, bigEndian));
+		hasfmi = TagUtils.isFileMetaInformation(ByteUtils.bytesToTag(b128, 0, bigEndian));
 	}
 
-	private boolean guessTransferSyntax(byte[] b128, int rlen, boolean bigEndian)
-			throws DicomStreamException {
+	private boolean guessTransferSyntax(byte[] b128, int rlen, boolean bigEndian) throws DicomStreamException {
 		int tag1 = ByteUtils.bytesToTag(b128, 0, bigEndian);
 		VR vr = ElementDictionary.vrOf(tag1, null);
 		if (vr == VR.UN)
 			return false;
 		if (ByteUtils.bytesToVR(b128, 4) == vr.code()) {
-			this.tsuid = bigEndian ? UID.ExplicitVRBigEndianRetired 
-					: UID.ExplicitVRLittleEndian;
+			this.tsuid = bigEndian ? UID.ExplicitVRBigEndianRetired : UID.ExplicitVRLittleEndian;
 			this.bigEndian = bigEndian;
 			this.explicitVR = true;
 			return true;

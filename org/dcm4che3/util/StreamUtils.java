@@ -59,6 +59,9 @@ public class StreamUtils {
             throw new IndexOutOfBoundsException();
         while (len > 0) {
             int count = in.read(b, off, len);
+            
+//            System.out.println("count: "+count);
+            
             if (count < 0)
                 throw new EOFException();
             off += count;

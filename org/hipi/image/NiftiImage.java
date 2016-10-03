@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.hipi.niftijio.NiftiHeader;
 import org.hipi.niftijio.NiftiVolume;
 
 public class NiftiImage extends HipiImage {
@@ -32,10 +31,10 @@ public class NiftiImage extends HipiImage {
 
 	public NiftiVolume getNiftiVolume() { return niiVol; }
 
-	public int getDimX() { return header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_X); }
-	public int getDimY() { return header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_Y); }
-	public int getDimZ() { return header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_Z); }
-	public int getDimT() { return header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_T); }
+	public int getDimX() { return (Integer)header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_X); }
+	public int getDimY() { return (Integer)header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_Y); }
+	public int getDimZ() { return (Integer)header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_Z); }
+	public int getDimT() { return (Integer)header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_T) == 0 ? 1 : (Integer)header.getValue(HipiImageHeader.NIFTI_INDEX_DIM_T); }
 
 
 	public static NiftiVolume extractAPart(NiftiVolume niiVol, int fromX, int fromY, int fromZ, int fromT, int toX, int toY, int toZ, int toT) {
@@ -56,14 +55,23 @@ public class NiftiImage extends HipiImage {
 					for (int i = 0, x = fromX; i < dimX; i++, x++)
 						data [i][j][k][d] = niiVol.data[x][y][z][t];
 
-		NiftiHeader header = new NiftiHeader(dimX, dimY, dimZ, dimT);
-		NiftiVolume out = new NiftiVolume(data, header);
-
+		NiftiVolume out = new NiftiVolume(data);
 
 		return out;
 	}
 
-	public String toString() { return "NiftiVolume data: "+niiVol.data[0][0][0][0]; }
+	public String toString() { 
+
+		StringBuilder stringBuilder = new StringBuilder("NiftiVolume data: \n");
+
+		for (int t = 0; t < getDimT(); t++)
+			for (int z = 0; z < getDimZ(); z++)
+				for (int y = 0; y < getDimY(); y++)
+					for (int x = 0; x < getDimX(); x++)
+						stringBuilder.append(String.format("\t\t\t\tdata[%d][%d][%d][%d] :\t %f\n", x, y, z, t, niiVol.data[x][y][z][t]) );
+
+		return new String(stringBuilder);
+	}
 
 
 	@Override

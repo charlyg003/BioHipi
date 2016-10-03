@@ -20,7 +20,6 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -649,16 +648,22 @@ public class HipiImageBundle {
 		default: throw new IllegalArgumentException("Unrecognized or unsupported image format.");
 		}
 
-		BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-		bufferedInputStream.mark(Integer.MAX_VALUE); // 100MB
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-		HipiImageHeader header = decoder.decodeHeader(bufferedInputStream);
-		if (metaData != null) {
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = inputStream.read(buffer)) > -1 )
+			baos.write(buffer, 0, len);
+		baos.flush();
+
+		inputStream				 = new ByteArrayInputStream(baos.toByteArray());
+		InputStream ipForDecoder = new ByteArrayInputStream(baos.toByteArray());
+
+		HipiImageHeader header = decoder.decodeHeader(ipForDecoder);
+		if (metaData != null)
 			header.setMetaData(metaData);
-		}
 
-		bufferedInputStream.reset();
-		addImage(header, bufferedInputStream);
+		addImage(header, inputStream);
 
 	}
 

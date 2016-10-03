@@ -66,11 +66,36 @@ import org.dcm4che3.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che3.tool.common.CLIUtils;
 import org.dcm4che3.util.Property;
 import org.dcm4che3.util.SafeClose;
+import org.hipi.tools.dcmdump.DcmDump;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
  */
 public class Dcm2Dcm {
+
+
+	public enum FieldTest {
+
+
+		UNDEFINED {
+			@Override
+			public String toString() {
+				return "no field value";
+			}
+		},
+
+		PATIENT_NAME {
+			@Override
+			public String toString() {
+				return "PatientName";
+			}
+		}
+
+		;
+
+
+	}
+
 
 	private static ResourceBundle rb =
 			ResourceBundle.getBundle("org.hipi.tools.dcm2dcm.messages");
@@ -203,35 +228,50 @@ public class Dcm2Dcm {
 			Dcm2Dcm main = new Dcm2Dcm();
 			main.setEncodingOptions(CLIUtils.encodingOptionsOf(cl));
 			if (cl.hasOption("F")) {
+
+				System.out.println("if");
+
 				if (transferSyntaxOf(cl, null) != null)
 					throw new ParseException(rb.getString("transfer-syntax-no-fmi"));
 				main.setTransferSyntax(UID.ImplicitVRLittleEndian);
 				main.setWithoutFileMetaInformation(true);
 			} else {
+
+				System.out.println("else");
+
 				main.setTransferSyntax(transferSyntaxOf(cl, UID.ExplicitVRLittleEndian));
+
+				System.out.println("cl.hasOption(\"f\"): "+cl.hasOption("f"));
+
 				main.setRetainFileMetaInformation(cl.hasOption("f"));
 			}
 
-			if (cl.hasOption("verify"))
-				main.addCompressionParam("maxPixelValueError",
-						cl.getParsedOptionValue("verify"));
+			if (cl.hasOption("verify")) {
+				System.out.println("verify");
+				main.addCompressionParam("maxPixelValueError", cl.getParsedOptionValue("verify"));
+			}
 
-			if (cl.hasOption("verify-block"))
-				main.addCompressionParam("avgPixelValueBlockSize",
-						cl.getParsedOptionValue("verify-block"));
+			if (cl.hasOption("verify-block")) {
+				System.out.println("verify-block");
+				main.addCompressionParam("avgPixelValueBlockSize", cl.getParsedOptionValue("verify-block"));
+			}
 
-			if (cl.hasOption("q"))
-				main.addCompressionParam("compressionQuality",
-						cl.getParsedOptionValue("q"));
+			if (cl.hasOption("q")) {
+				System.out.println("q");
+				main.addCompressionParam("compressionQuality", cl.getParsedOptionValue("q"));
+			}
 
-			if (cl.hasOption("Q"))
-				main.addCompressionParam("encodingRate",
-						cl.getParsedOptionValue("Q"));
+			if (cl.hasOption("Q")) {
+				System.out.println("Q");
+				main.addCompressionParam("encodingRate", cl.getParsedOptionValue("Q"));
+			}
 
 			String[] cparams = cl.getOptionValues("C");
-			if (cparams != null)
+			if (cparams != null) {
+				System.out.println("C");
 				for (int i = 0; i < cparams.length;)
 					main.addCompressionParam(cparams[i++], toValue(cparams[i++]));
+			}
 
 			@SuppressWarnings("unchecked")
 			final List<String> argList = cl.getArgList();
@@ -300,7 +340,14 @@ public class Dcm2Dcm {
 
 		Attributes fmi;
 		Attributes dataset;
+
 		DicomInputStream dis = new DicomInputStream(src);
+		DicomInputStream dis_test = new DicomInputStream(src);
+
+		DcmDump dcmDump = new DcmDump();
+
+		dcmDump.parse(dis_test);
+		System.out.println(dcmDump.getStringBuilder());
 
 		try {
 			dis.setIncludeBulkData(IncludeBulkData.URI);
@@ -309,6 +356,13 @@ public class Dcm2Dcm {
 		} finally {
 			dis.close();
 		}
+		System.out.println("--------------------------------------------------------");
+		System.out.println(    dataset.getDouble(Tag.StudyTime, 0d)    ) ;
+//		System.out.println(    Double.parseDouble(   dataset.getString(Tag.AccessionNumber) )  ) ;
+//		System.out.println(    Long.parseLong(   dataset.getString(Tag.AccessionNumber) )  ) ;
+//		System.out.println(    Integer.parseInt(   dataset.getString(Tag.AccessionNumber) )  ) ;
+		System.out.println("--------------------------------------------------------");
+
 
 		Object pixeldata = dataset.getValue(Tag.PixelData);
 		Compressor compressor = null;
@@ -319,6 +373,9 @@ public class Dcm2Dcm {
 			String tsuid = this.tsuid;
 			if (pixeldata != null) {
 				if (tstype.isPixeldataEncapsulated()) {
+
+					System.out.println("if tstype");
+
 					tsuid = adjustTransferSyntax(tsuid, dataset.getInt(Tag.BitsStored, 8));
 					//		compressor = new Compressor(dataset, dis.getTransferSyntax(),tsuid, params.toArray(new Property[params.size()]));
 					compressor = new Compressor(dataset, dis.getTransferSyntax());
@@ -338,7 +395,25 @@ public class Dcm2Dcm {
 			dos.setEncodingOptions(encOpts);
 			dos.writeDataset(fmi, dataset);
 
+			//			System.out.println("------------------------------------------------------------------------------------------------");
+			//			
+			//			System.out.println(ElementDictionary.keywordOf(0, null));
+			//			System.out.println(ElementDictionary.keywordOf(1, null));
+			//			System.out.println(ElementDictionary.keywordOf(2, null));
+			//			System.out.println(ElementDictionary.keywordOf(3, null));
+			//			System.out.println(ElementDictionary.keywordOf(4, null));
+			//			System.out.println(ElementDictionary.keywordOf(5, null));
+			//			System.out.println(ElementDictionary.keywordOf(6, null));
+			//			System.out.println(ElementDictionary.keywordOf(7, null));
+			//			System.out.println(ElementDictionary.keywordOf(8, null));
+			//			System.out.println(ElementDictionary.keywordOf(9, null));
+			//			
+			//			
+			//			System.out.println("------------------------------------------------------------------------------------------------");
+
+			System.out.println(FieldTest.PATIENT_NAME.toString());
 		} finally {
+
 			SafeClose.close(compressor);
 			SafeClose.close(dos);
 			System.out.println("******************* START TRANSCODE ***************************");

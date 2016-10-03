@@ -1,4 +1,4 @@
-package org.hipi.test;
+package org.hipi.examples;
 
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;

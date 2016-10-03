@@ -62,7 +62,7 @@ public abstract class ImageCodec implements ImageDecoder, ImageEncoder {
 
 		// Check that image dimensions in header match those in JPEG
 //		if (w != imageHeader.getWidth() || h != imageHeader.getHeight()) {
-		if (w != imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH) || h != imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT)) {
+		if (w != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH) || h != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT)) {
 			System.out.println(String.format("Dimensions read from JPEG: %d x %d", w, h));
 			System.out.println(imageHeader);
 			throw new IllegalArgumentException("Image dimensions in header do not match those in JPEG.");

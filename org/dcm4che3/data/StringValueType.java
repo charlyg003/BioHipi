@@ -492,11 +492,6 @@ enum StringValueType implements ValueType {
     static boolean prompt(String s, int maxChars, StringBuilder sb) {
         int maxLength = sb.length() + maxChars;
         sb.append(s.trim());
-        
-        System.out.println("s.trim()  ->  "+s.trim());
-        System.out.println();
-        System.out.println();
-        
         if (sb.length() > maxLength) {
             sb.setLength(maxLength+1);
             return false;
