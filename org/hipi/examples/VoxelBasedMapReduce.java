@@ -3,8 +3,8 @@ package org.hipi.examples;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
-import org.hipi.niftijio.NiftiVolume;
 import org.hipi.util.MultipleLinearRegression;
+import org.hipi.util.niftijio.NiftiVolume;
 import org.apache.commons.io.FilenameUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -66,16 +66,14 @@ public class VoxelBasedMapReduce extends Configured implements Tool {
 			NiftiVolume nii = image.getNiftiVolume();
 			double[][][][] data = nii.data;
 
-			for(int i=120-10; i<120+10; i++){
-				for(int j=120-10; j<120+10; j++){
+			for(int i=120-10; i<120+10; i++)
+				for(int j=120-10; j<120+10; j++)
 					for(int k=120-10; k<120+10; k++){
 						double val = data[i][j][k][0];
 						Text text = new Text(Integer.toString(i) + " " + Integer.toString(j) + " " + Integer.toString(k));
 						DoubleWritable dwritable = new DoubleWritable(val);
 						context.write(text,dwritable);
 					}
-				}
-			}
 		}
 	}
 

@@ -63,6 +63,7 @@ public class HibToDicom extends Configured implements Tool {
         System.err.println("Failed to determine base name of source metadata value, skipping.");
         return;
       }
+      
 
       Path outpath = new Path(path + "/" + base + ".dcm");
 

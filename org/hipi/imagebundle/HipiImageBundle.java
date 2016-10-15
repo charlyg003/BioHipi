@@ -240,14 +240,6 @@ public class HipiImageBundle {
 					throw new IOException("Found UNDEFINED image storage format in HIB at offset: " + currentOffset);
 				}
 
-
-				//        System.out.println("nextKeyValue()");
-				//        System.out.println("imageHeaderLength: " + imageHeaderLength);
-				//        System.out.println("imageLength: " + imageLength);
-				//        System.out.println("imageFormatInt: " + imageFormatInt);
-				//        System.out.println("imageFormat: " + imageFormat.toInteger());
-
-
 				// Allocate byte array to hold image header data
 				byte[] imageHeaderBytes = new byte[imageHeaderLength];
 
@@ -268,9 +260,7 @@ public class HipiImageBundle {
 				DataInputStream dis = new DataInputStream(new ByteArrayInputStream(imageHeaderBytes));
 				imageHeader = new HipiImageHeader(dis);
 
-				//				System.out.println("HeadInfo: " + imageHeader.getHeight() + " " + imageHeader.getWidth() + " " + imageHeader.getNumBands());
 				System.out.println("MetaInfo: " + imageHeader.getAllMetaData());
-
 
 				// Wrap image bytes in stream
 				ByteArrayInputStream imageByteStream = new ByteArrayInputStream(imageBytes);
@@ -304,7 +294,6 @@ public class HipiImageBundle {
 				
 				case FLOAT:
 				case BYTE:
-					
 					try {
 						image = decoder.decodeImage(imageByteStream, imageHeader, imageFactory, true);
 					} catch (Exception e) {
@@ -318,7 +307,6 @@ public class HipiImageBundle {
 
 				case NIFTI:
 				case DICOM:
-					
 					try {
 						image = decoder.decodeImage(imageByteStream, imageHeader, imageFactory, false);
 					} catch (Exception e) {

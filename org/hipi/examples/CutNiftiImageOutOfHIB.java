@@ -4,7 +4,7 @@ import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.hipi.image.NiftiImage;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
-import org.hipi.niftijio.NiftiVolume;
+import org.hipi.util.niftijio.NiftiVolume;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;

@@ -1,20 +1,20 @@
 package org.hipi.examples;
 
-import org.hipi.image.DicomImage;
-import org.hipi.image.HipiImageHeader;
-import org.hipi.imagebundle.mapreduce.HibInputFormat;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configured;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-
-import java.io.IOException;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+import org.hipi.image.DicomImage;
+import org.hipi.image.HipiImageHeader;
+import org.hipi.imagebundle.mapreduce.HibInputFormat;
 
 public class TakeIndividualPatientDicomOutOfHIB extends Configured implements Tool {
 
@@ -29,7 +29,7 @@ public class TakeIndividualPatientDicomOutOfHIB extends Configured implements To
 				// Emit record to reducer
 				if ( ((String)key.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME)).contains("MOUGE") )
 					context.write(new Text(key.toString()), value);
-				
+
 
 			} // If (value != null...
 
@@ -43,8 +43,9 @@ public class TakeIndividualPatientDicomOutOfHIB extends Configured implements To
 				throws IOException, InterruptedException {
 
 			// Emit output of job which will be written to HDFS
-			for (DicomImage val : values)
+			for (DicomImage val : values) {
 				context.write(new Text(key) , new Text(val.toString()));
+			}
 
 		} // reduce()
 
@@ -53,7 +54,7 @@ public class TakeIndividualPatientDicomOutOfHIB extends Configured implements To
 	public int run(String[] args) throws Exception {
 		// Check input arguments
 		if (args.length != 2) {
-			System.out.println("Usage: helloWorld <input HIB> <output directory>");
+			System.out.println("Usage: nameFile.jar <input HIB> <output directory>");
 			System.exit(0);
 		}
 

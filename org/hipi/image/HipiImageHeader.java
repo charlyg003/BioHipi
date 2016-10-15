@@ -258,7 +258,7 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 	 * Creates an ImageHeader for Dicom.
 	 */
 	public HipiImageHeader(HipiImageFormat storageFormat, String patientID, String patientName, int rows, int columns, byte[] metaDataBytes,  Map<String,String> exifData) {
-
+		
 		this(storageFormat, DICOM_DIM, metaDataBytes, exifData);
 		
 		if (storageFormat != HipiImageFormat.DICOM)

@@ -60,7 +60,7 @@ public class RGBImageBundleAvg extends Configured implements Tool {
 
 		} // map()
 
-	} // HelloWorldMapper
+	}
 
 	public static class AvgRGBImageReducer extends Reducer<IntWritable, FloatImage, IntWritable, Text> {
 
@@ -90,7 +90,8 @@ public class RGBImageBundleAvg extends Configured implements Tool {
 
 		} // reduce()
 
-	} // HelloWorldReducer
+	}
+	
 	public int run(String[] args) throws Exception {
 		// Check input arguments
 		if (args.length != 2) {

@@ -3,8 +3,8 @@ package org.hipi.image.io;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.NiftiImage;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
-import org.hipi.niftijio.NiftiHeader;
-import org.hipi.niftijio.NiftiVolume;
+import org.hipi.util.niftijio.NiftiHeader;
+import org.hipi.util.niftijio.NiftiVolume;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageFactory;
 

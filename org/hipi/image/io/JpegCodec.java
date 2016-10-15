@@ -79,7 +79,7 @@ public class JpegCodec extends ImageCodec {
 			dis.reset();
 			exifData = ExifDataReader.extractAndFlatten(dis);
 		}
-
+		
 		return new HipiImageHeader(HipiImageFormat.JPEG, HipiColorSpace.RGB, width, height, 3, null, exifData);
 	}
 
@@ -103,13 +103,12 @@ public class JpegCodec extends ImageCodec {
 		ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
 		Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
 		ImageWriter writer = writers.next();
-		System.out.println("Using JPEG encoder: " + writer);
 		writer.setOutput(ios);
 
 		ImageWriteParam param = writer.getDefaultWriteParam();
 		param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-		param.setCompressionQuality(0.95F); // highest JPEG quality = 1.0F
-
+//		param.setCompressionQuality(0.95F); // highest JPEG quality = 1.0F
+		param.setCompressionQuality(1.0F); // highest JPEG quality = 1.0F
 		encodeRasterImage((RasterImage) image, writer, param);
 	}
 

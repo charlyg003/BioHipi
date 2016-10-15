@@ -4,6 +4,7 @@ import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
+import org.dcm4che3.data.UID;
 import org.dcm4che3.io.DicomInputStream;
 import org.dcm4che3.io.DicomOutputStream;
 import org.dcm4che3.util.SafeClose;
@@ -33,9 +34,10 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 	@Override
 	public void encodeImage(HipiImage image, OutputStream outputStream) throws IllegalArgumentException, IOException {
 		DicomOutputStream dos = null;
+
 		try {
-			dos = new DicomOutputStream(outputStream, ((DicomImage)image).getDicomInputStream().getTransferSyntax());
-			dos.writeDatasetWithFMI(((DicomImage)image).getDatasetWithFMI());
+			dos = new DicomOutputStream(outputStream, UID.ExplicitVRLittleEndian);
+			dos.writeDataset(((DicomImage)image).getFileMetaInformation(), ((DicomImage)image).getDataset());
 		} finally {
 			SafeClose.close(dos);
 		}
@@ -63,7 +65,6 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 	@Override
 	public HipiImage decodeImage(InputStream inputStream, HipiImageHeader imageHeader, HipiImageFactory imageFactory,
 			boolean includeExifData) throws IllegalArgumentException, IOException {
-		
 		return new DicomImage(inputStream, imageHeader);
 	}
 

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.hipi.niftijio.NiftiVolume;
+import org.hipi.util.niftijio.NiftiVolume;
 
 public class NiftiImage extends HipiImage {
 
