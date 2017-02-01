@@ -257,14 +257,14 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 	/**
 	 * Creates an ImageHeader for Dicom.
 	 */
-	public HipiImageHeader(HipiImageFormat storageFormat, String patientID, String patientName, int rows, int columns, byte[] metaDataBytes,  Map<String,String> exifData) {
+	public HipiImageHeader(HipiImageFormat storageFormat, String patientID, String patientName, Integer rows, Integer columns, byte[] metaDataBytes,  Map<String,String> exifData) {
 		
 		this(storageFormat, DICOM_DIM, metaDataBytes, exifData);
 		
 		if (storageFormat != HipiImageFormat.DICOM)
 			throw new IllegalArgumentException(String.format("Invalid storage format (%s) for this constructor, only Dicom.", storageFormat.toString()));
 
-		if (patientID == null || patientName == null || rows < 1 || columns < 1)
+		if (patientID == null || patientName == null || rows == null || columns == null)
 			throw new IllegalArgumentException(String.format("Invalid parameters: (%s,%s,%d,%d)", patientID, patientName, rows, columns));
 
 		
@@ -549,8 +549,8 @@ public class HipiImageHeader implements WritableComparable<HipiImageHeader> {
 		case DICOM:
 			out.writeUTF((String) values[DICOM_INDEX_PATIENT_ID]);
 			out.writeUTF((String) values[DICOM_INDEX_PATIENT_NAME]);
-			out.writeInt((int) values[DICOM_INDEX_ROWS]);
-			out.writeInt((int) values[DICOM_INDEX_COLUMNS]);
+			out.writeInt((Integer) values[DICOM_INDEX_ROWS]);
+			out.writeInt((Integer) values[DICOM_INDEX_COLUMNS]);
 			break;
 
 		case RDA:

@@ -33,8 +33,9 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 
 	@Override
 	public void encodeImage(HipiImage image, OutputStream outputStream) throws IllegalArgumentException, IOException {
+		
 		DicomOutputStream dos = null;
-
+		
 		try {
 			dos = new DicomOutputStream(outputStream, UID.ExplicitVRLittleEndian);
 			dos.writeDataset(((DicomImage)image).getFileMetaInformation(), ((DicomImage)image).getDataset());
@@ -56,7 +57,7 @@ public class DicomCodec implements ImageDecoder, ImageEncoder {
 		
 		return new HipiImageHeader(HipiImageFormat.DICOM, dataset.getString(Tag.PatientID), dataset.getString(Tag.PatientName), Integer.parseInt(dataset.getString(Tag.Rows)), Integer.parseInt(dataset.getString(Tag.Columns)),  null , null);
 	}
-
+	
 	@Override
 	public HipiImageHeader decodeHeader(InputStream inputStream) throws IOException {
 		return decodeHeader(inputStream, false);

@@ -646,8 +646,13 @@ public class HipiImageBundle {
 
 		inputStream				 = new ByteArrayInputStream(baos.toByteArray());
 		InputStream ipForDecoder = new ByteArrayInputStream(baos.toByteArray());
-
-		HipiImageHeader header = decoder.decodeHeader(ipForDecoder);
+		
+		HipiImageHeader header = null;
+		if (imageFormat == HipiImageFormat.DICOM)
+			header = decoder.decodeHeader(ipForDecoder);
+		else 
+			header = decoder.decodeHeader(ipForDecoder);
+			
 		if (metaData != null)
 			header.setMetaData(metaData);
 

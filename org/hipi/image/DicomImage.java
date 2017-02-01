@@ -1,6 +1,5 @@
 package org.hipi.image;
 
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -8,24 +7,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
 
 import org.dcm4che3.data.Attributes;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
-import org.dcm4che3.imageio.plugins.dcm.DicomImageReadParam;
 import org.dcm4che3.io.DicomInputStream;
 import org.dcm4che3.io.DicomOutputStream;
 import org.dcm4che3.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che3.util.SafeClose;
-import org.hipi.image.HipiImageHeader.HipiImageFormat;
-import org.hipi.image.io.CodecManager;
-import org.hipi.image.io.ImageDecoder;
 import org.hipi.util.DcmDump;
+
+import ij.ImageStack;
+import ij.plugin.DICOM;
 
 public class DicomImage extends HipiImage {
 
@@ -34,22 +27,32 @@ public class DicomImage extends HipiImage {
 	Attributes dataset;
 	ByteArrayOutputStream byteArrayOutputStream;
 
+	DICOM dicom;
+
 	public DicomImage(){
 		super();
 	}
 
 	public DicomImage(InputStream ip, HipiImageHeader header) throws IOException {
 		this.header = header;
+		
+		
 		inizialiteByteArrayOutputStream(ip);
+		this.dicom = new DICOM(getInputStream());
+		this.dicom.run("w");
 		setDicomValues(getInputStream());
 
-		//		if ((String) header.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_ID) != getFieldValue(Tag.PatientID) || (String) header.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME) != getFieldValue(Tag.PatientName)
-		//				|| (Integer) header.getValue(HipiImageHeader.DICOM_INDEX_ROWS) != getFieldValue(Tag.Rows) || (Integer) header.getValue(HipiImageHeader.DICOM_INDEX_COLUMNS) != getFieldValue(Tag.Columns))
-		//			throw new IllegalArgumentException(String.format("Incompatible header -> (PatientID: %s, PatientName: %s, Rows: %d, Columns: %d) "
-		//					+ "& image -> (PatientID: %s, PatientName: %s, Rows: %d, Columns: %d)", 
-		//					(String) header.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_ID), (String) header.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME), (Integer) header.getValue(HipiImageHeader.DICOM_INDEX_ROWS), (Integer) header.getValue(HipiImageHeader.DICOM_INDEX_COLUMNS), getFieldValue(Tag.PatientID), getFieldValue(Tag.PatientName), getFieldValue(Tag.Rows), getFieldValue(Tag.Columns)));
-
 	}
+	
+	public DICOM getDICOM() {
+		return this.dicom;
+	}
+	
+	public void setDICOMStack(ImageStack dicomStack) {
+		this.dicom = new DICOM();
+		this.dicom.setStack(dicomStack);
+	}
+	
 
 	private void inizialiteByteArrayOutputStream(InputStream ip) throws IOException {
 		byteArrayOutputStream = new ByteArrayOutputStream();
@@ -61,7 +64,7 @@ public class DicomImage extends HipiImage {
 		byteArrayOutputStream.flush();
 	}
 
-	private InputStream getInputStream() {
+	public InputStream getInputStream() {
 		return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
 	}
 
@@ -89,7 +92,12 @@ public class DicomImage extends HipiImage {
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		header = new HipiImageHeader(in);
+		
+		
 		inizialiteByteArrayOutputStream((InputStream) in);
+		
+		this.dicom = new DICOM(getInputStream());
+		this.dicom.run("w");
 		setDicomValues(getInputStream());
 	}
 
@@ -109,6 +117,7 @@ public class DicomImage extends HipiImage {
 	}
 
 	public String toString() {
+		
 		DcmDump dcmDump = new DcmDump();
 		DicomInputStream dis = null;
 		try {
@@ -124,87 +133,6 @@ public class DicomImage extends HipiImage {
 		return new String(dcmDump.getStringBuilder());
 	}
 
-	public BufferedImage createBufferedImage() {
-
-		BufferedImage bi = null;
-
-		Iterator<ImageReader> iter = ImageIO.getImageReadersByFormatName("DICOM");
-		ImageReader reader = iter.next();
-
-		DicomImageReadParam param = (DicomImageReadParam) reader.getDefaultReadParam();
-
-		try {
-			ImageInputStream iis = ImageIO.createImageInputStream(getInputStream());
-			reader.setInput(iis, false);   
-			bi = reader.read(0, param);
-			iis.close();
-			if (bi == null) {
-				System.out.println("\nError: buffered image is null!");
-				return null;
-			}
-		} catch(IOException e) {
-			System.out.println("\nError: couldn't read dicom image!"+ e.getMessage());
-			return null;
-		}
-
-		return bi;
-	}
-
-	public RasterImage getRasterImage(HipiImageFormat imgFormat, HipiImageType imgType) {
-
-		if (!(imgFormat == HipiImageFormat.JPEG || imgFormat == HipiImageFormat.PNG))
-			throw new IllegalArgumentException("Only Jpeg and Png output forma.");
-
-		BufferedImage bi = createBufferedImage();
-
-		try {
-
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ImageIO.write(bi, imgFormat.toString().toLowerCase(), baos);
-
-			ImageDecoder decoder = CodecManager.getDecoder(imgFormat);
-
-			HipiImageHeader imgHeader = decoder.decodeHeader(new ByteArrayInputStream(baos.toByteArray()));
-			HipiImageFactory imgFactory = null;
-			switch (imgType) {
-			case FLOAT:
-				imgFactory = HipiImageFactory.getFloatImageFactory();
-				break;
-			case BYTE:
-				imgFactory = HipiImageFactory.getByteImageFactory();
-				break;
-			default:
-				throw new IllegalArgumentException("Only FloatImage and ByteImage output types.");
-			}
-
-			return (RasterImage) decoder.decodeImage(new ByteArrayInputStream(baos.toByteArray()), imgHeader, imgFactory, false);
-
-		} catch (IOException e) {
-			System.out.println("\nError: couldn't create raster image!"+ e.getMessage());
-			return null;
-		}
-	}
-
-	/**
-	 * Extract a ByteImage with JPEG format
-	 * @return ByteImage from this dicom file
-	 */
-	public ByteImage getByteJpegImage()		{ return (ByteImage) getRasterImage(HipiImageFormat.JPEG, HipiImageType.BYTE); }
-	/**
-	 * Extract a ByteImage with PNG format
-	 * @return ByteImage from this dicom file
-	 */
-	public ByteImage getBytePngImage()		{ return (ByteImage) getRasterImage(HipiImageFormat.PNG, HipiImageType.BYTE); }
-	/**
-	 * Extract a FloatImage with JPEG format
-	 * @return FloatImage from this dicom file
-	 */
-	public FloatImage getFloatJpegImage()	{ return (FloatImage) getRasterImage(HipiImageFormat.JPEG, HipiImageType.FLOAT); }
-	/**
-	 * Extract a FloatImage with PNG format
-	 * @return FloatImage from this dicom file
-	 */
-	public FloatImage getFloatPngImage()	{ return (FloatImage) getRasterImage(HipiImageFormat.PNG, HipiImageType.FLOAT); }
 
 	/**
 	 * Get the field value with tag position
