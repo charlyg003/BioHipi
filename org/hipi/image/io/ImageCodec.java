@@ -3,6 +3,7 @@ package org.hipi.image.io;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImage.HipiImageType;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.image.RasterImage;
 import org.hipi.image.HipiImageFactory;
 import org.hipi.image.PixelArray;
@@ -57,13 +58,11 @@ public abstract class ImageCodec implements ImageDecoder, ImageEncoder {
 		// Find suitable ImageIO plugin (should be TwelveMonkeys)
 		BufferedImage javaImage = ImageIO.read(dis);// inputStream);
 		
-//		return decodeImage(javaImage, imageHeader, imageFactory, includeExifData);
-
 		int w = javaImage.getWidth();
 		int h = javaImage.getHeight();
 		
 		// Check that image dimensions in header match those in JPEG
-		if (w != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH) || h != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT)) {
+		if (w != (Integer)imageHeader.getImageInfo(HipiKeyImageInfo.WIDTH) || h != (Integer)imageHeader.getImageInfo(HipiKeyImageInfo.HEIGHT)) {
 			System.out.println(String.format("Dimensions read from JPEG: %d x %d", w, h));
 			System.out.println(imageHeader);
 			throw new IllegalArgumentException("Image dimensions in header do not match those in JPEG.");
@@ -112,70 +111,6 @@ public abstract class ImageCodec implements ImageDecoder, ImageEncoder {
 
 		return image;
 	}
-	
-//	public HipiImage decodeImage(BufferedImage javaImage, HipiImageHeader imageHeader, HipiImageFactory imageFactory,
-//			boolean includeExifData) throws IllegalArgumentException, IOException {
-//
-//		// Verify image factory
-//		if (!(imageFactory.getType() == HipiImageType.FLOAT || imageFactory.getType() == HipiImageType.BYTE)) {
-//			throw new IllegalArgumentException("Image decoder supports only FloatImage and ByteImage output types.");
-//		}
-//
-//		int w = javaImage.getWidth();
-//		int h = javaImage.getHeight();
-//		
-//		System.out.println(w+" - "+h);
-//
-//		// Check that image dimensions in header match those in JPEG
-//		if (w != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH) || h != (Integer)imageHeader.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT)) {
-//			System.out.println(String.format("Dimensions read from JPEG: %d x %d", w, h));
-//			System.out.println(imageHeader);
-//			throw new IllegalArgumentException("Image dimensions in header do not match those in JPEG.");
-//		}
-//
-//		// Create output image
-//		RasterImage image = null;
-//		try {
-//			image = (RasterImage) imageFactory.createImage(imageHeader);
-//		} catch (Exception e) {
-//			System.err.println(String.format("Fatal error while creating image object [%s]", e.getMessage()));
-//			e.printStackTrace();
-//			System.exit(1);
-//		}
-//
-//		PixelArray pa = image.getPixelArray();
-//
-//		for (int j = 0; j < h; j++) {
-//			for (int i = 0; i < w; i++) {
-//
-//				// Retrieve 8-bit non-linear sRGB value packed into int
-//				int pixel = javaImage.getRGB(i, j);
-//
-//				int red = (pixel >> 16) & 0xff;
-//				int grn = (pixel >> 8) & 0xff;
-//				int blu = (pixel) & 0xff;
-//
-//				// Set value in pixel array using routine designed for sRGB
-//				// values
-//				pa.setElemNonLinSRGB((j * w + i) * 3 + 0, red);
-//				pa.setElemNonLinSRGB((j * w + i) * 3 + 1, grn);
-//				pa.setElemNonLinSRGB((j * w + i) * 3 + 2, blu);
-//
-//			}
-//		}
-//
-////		if (includeExifData) {
-////			// Extract EXIF data from image stream and store in image header
-////			dis.reset();
-////			try {
-////				imageHeader.setExifData(ExifDataReader.extractAndFlatten(dis));
-////			} catch (IOException ex) {
-////				System.err.println("Failed to extract EXIF data for image record.");
-////			}
-////		}
-//
-//		return image;
-//	}
 
 	/**
 	 * Default method for encoding raster images that uses the available ImageIO

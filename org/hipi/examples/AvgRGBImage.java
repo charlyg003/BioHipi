@@ -18,7 +18,15 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 
-public class RGBImageBundleAvg extends Configured implements Tool {
+/**
+ * 
+ * AvgRGBImage is an example of how to manipulate
+ * Float images, such as PNG or JPEG, in HIB.<br>
+ * Specifically, it returns the average of the primary 
+ * colors (RGB) derived from the images present in the bundle.
+ * 
+ */
+public class AvgRGBImage extends Configured implements Tool {
 
 	public static class AvgRGBImageMapper extends Mapper<HipiImageHeader, FloatImage, IntWritable, FloatImage> {
 
@@ -104,7 +112,7 @@ public class RGBImageBundleAvg extends Configured implements Tool {
 		// Set input format class which parses the input HIB and spawns map tasks
 		job.setInputFormatClass(HibInputFormat.class);
 		// Set the driver, mapper, and reducer classes which express the computation
-		job.setJarByClass(RGBImageBundleAvg.class);
+		job.setJarByClass(AvgRGBImage.class);
 		job.setMapperClass(AvgRGBImageMapper.class);
 		job.setReducerClass(AvgRGBImageReducer.class);
 		// Set the types for the key/value pairs passed to/from map and reduce layers
@@ -125,7 +133,7 @@ public class RGBImageBundleAvg extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new RGBImageBundleAvg(), args);
+		ToolRunner.run(new AvgRGBImage(), args);
 		System.exit(0);
 	}
 

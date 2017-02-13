@@ -5,14 +5,12 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
-import java.util.zip.GZIPInputStream;
 import java.util.Date;
 
 public class NiftiHeader
@@ -601,19 +599,19 @@ public class NiftiHeader
         return (b);
     }
 
-    private static boolean littleEndian(String fn) throws IOException
-    {
-        InputStream is = new FileInputStream(fn);
-        if (fn.endsWith(".gz"))
-            is = new GZIPInputStream(is);
-        DataInputStream di = new DataInputStream(is);
-
-        di.skipBytes(40);
-        short s = di.readShort();
-
-        di.close();
-        return (s < 1) || (s > 7);
-    }
+//    private static boolean littleEndian(String fn) throws IOException
+//    {
+//        InputStream is = new FileInputStream(fn);
+//        if (fn.endsWith(".gz"))
+//            is = new GZIPInputStream(is);
+//        DataInputStream di = new DataInputStream(is);
+//
+//        di.skipBytes(40);
+//        short s = di.readShort();
+//
+//        di.close();
+//        return (s < 1) || (s > 7);
+//    }
     
     private static boolean littleEndianStream(InputStream is) throws IOException
     {
@@ -626,158 +624,158 @@ public class NiftiHeader
         return (s < 1) || (s > 7);
     }
 
-    private static boolean littleEndianStream(DataInput di) throws IOException
-    {
-    	((InputStream) di).mark(Integer.MAX_VALUE);
-    	di.skipBytes(40);
-    	short s = di.readShort();
-    	
-    	((InputStream) di).reset();
-    	return (s < 1) || (s > 7);
-    }
+//    private static boolean littleEndianStream(DataInput di) throws IOException
+//    {
+//    	((InputStream) di).mark(Integer.MAX_VALUE);
+//    	di.skipBytes(40);
+//    	short s = di.readShort();
+//    	
+//    	((InputStream) di).reset();
+//    	return (s < 1) || (s > 7);
+//    }
 
-    public static NiftiHeader read(String fn) throws IOException
-    {
-        DataInput di;
-
-        boolean le = littleEndian(fn);
-
-        InputStream is = new FileInputStream(fn);
-        if (fn.endsWith(".gz"))
-            is = new GZIPInputStream(is);
-
-        if (le)
-            di = new LEDataInputStream(is);
-        else
-            di = new DataInputStream(is);
-
-        NiftiHeader ds = new NiftiHeader();
-
-        ds.filename = fn;
-        ds.little_endian = le;
-        ds.sizeof_hdr = di.readInt();
-
-        byte[] bb = new byte[10];
-        di.readFully(bb, 0, 10);
-        ds.data_type_string = new StringBuffer(new String(bb));
-
-        bb = new byte[18];
-        di.readFully(bb, 0, 18);
-        ds.db_name = new StringBuffer(new String(bb));
-        ds.extents = di.readInt();
-        ds.session_error = di.readShort();
-        ds.regular = new StringBuffer();
-        ds.regular.append((char) (di.readUnsignedByte()));
-        ds.dim_info = new StringBuffer();
-        ds.dim_info.append((char) (di.readUnsignedByte()));
-
-        int fps_dim = (int) ds.dim_info.charAt(0);
-        ds.freq_dim = (short) (fps_dim & 3);
-        ds.phase_dim = (short) ((fps_dim >>> 2) & 3);
-        ds.slice_dim = (short) ((fps_dim >>> 4) & 3);
-
-        for (int i = 0; i < 8; i++)
-            ds.dim[i] = di.readShort();
-        if (ds.dim[0] > 0)
-            ds.dim[1] = ds.dim[1];
-        if (ds.dim[0] > 1)
-            ds.dim[2] = ds.dim[2];
-        if (ds.dim[0] > 2)
-            ds.dim[3] = ds.dim[3];
-        if (ds.dim[0] > 3)
-            ds.dim[4] = ds.dim[4];
-
-        for (int i = 0; i < 3; i++)
-            ds.intent[i] = di.readFloat();
-
-        ds.intent_code = di.readShort();
-        ds.datatype = di.readShort();
-        ds.bitpix = di.readShort();
-        ds.slice_start = di.readShort();
-
-        for (int i = 0; i < 8; i++)
-            ds.pixdim[i] = di.readFloat();
-
-        ds.qfac = (short) Math.floor((double) (ds.pixdim[0]));
-        ds.vox_offset = di.readFloat();
-        ds.scl_slope = di.readFloat();
-        ds.scl_inter = di.readFloat();
-        ds.slice_end = di.readShort();
-        ds.slice_code = (byte) di.readUnsignedByte();
-
-        ds.xyzt_units = (byte) di.readUnsignedByte();
-
-        int unit_codes = (int) ds.xyzt_units;
-        ds.xyz_unit_code = (short) (unit_codes & 007);
-        ds.t_unit_code = (short) (unit_codes & 070);
-
-        ds.cal_max = di.readFloat();
-        ds.cal_min = di.readFloat();
-        ds.slice_duration = di.readFloat();
-        ds.toffset = di.readFloat();
-        ds.glmax = di.readInt();
-        ds.glmin = di.readInt();
-
-        bb = new byte[80];
-        di.readFully(bb, 0, 80);
-        ds.descrip = new StringBuffer(new String(bb));
-
-        bb = new byte[24];
-        di.readFully(bb, 0, 24);
-        ds.aux_file = new StringBuffer(new String(bb));
-
-        ds.qform_code = di.readShort();
-        ds.sform_code = di.readShort();
-
-        for (int i = 0; i < 3; i++)
-            ds.quatern[i] = di.readFloat();
-        for (int i = 0; i < 3; i++)
-            ds.qoffset[i] = di.readFloat();
-
-        for (int i = 0; i < 4; i++)
-            ds.srow_x[i] = di.readFloat();
-        for (int i = 0; i < 4; i++)
-            ds.srow_y[i] = di.readFloat();
-        for (int i = 0; i < 4; i++)
-            ds.srow_z[i] = di.readFloat();
-
-        bb = new byte[16];
-        di.readFully(bb, 0, 16);
-        ds.intent_name = new StringBuffer(new String(bb));
-
-        bb = new byte[4];
-        di.readFully(bb, 0, 4);
-        ds.magic = new StringBuffer(new String(bb));
-
-        di.readFully(ds.extension, 0, 4);
-
-        if (ds.extension[0] != (byte) 0)
-        {
-            int start_addr = NiftiHeader.ANZ_HDR_SIZE + 4;
-
-            while (start_addr < (int) ds.vox_offset)
-            {
-                int[] size_code = new int[2];
-                size_code[0] = di.readInt();
-                size_code[1] = di.readInt();
-
-                int nb = size_code[0] - NiftiHeader.EXT_KEY_SIZE;
-                byte[] eblob = new byte[nb];
-                di.readFully(eblob, 0, nb);
-                ds.extension_blobs.add(eblob);
-                ds.extensions_list.add(size_code);
-                start_addr += (size_code[0]);
-
-                if (start_addr > (int) ds.vox_offset)
-                    throw new IOException("Error: Data  for extension " + (ds.extensions_list.size())
-                            + " appears to overrun start of image data.");
-            }
-        }
-
-        return ds;
-    }
+//    public static NiftiHeader read(String fn) throws IOException
+//    {
+//        DataInput di;
+//
+//        boolean le = littleEndian(fn);
+//
+//        InputStream is = new FileInputStream(fn);
+//        if (fn.endsWith(".gz"))
+//            is = new GZIPInputStream(is);
+//
+//        if (le)
+//            di = new LEDataInputStream(is);
+//        else
+//            di = new DataInputStream(is);
+//
+//        NiftiHeader ds = new NiftiHeader();
+//
+//        ds.filename = fn;
+//        ds.little_endian = le;
+//        ds.sizeof_hdr = di.readInt();
+//
+//        byte[] bb = new byte[10];
+//        di.readFully(bb, 0, 10);
+//        ds.data_type_string = new StringBuffer(new String(bb));
+//
+//        bb = new byte[18];
+//        di.readFully(bb, 0, 18);
+//        ds.db_name = new StringBuffer(new String(bb));
+//        ds.extents = di.readInt();
+//        ds.session_error = di.readShort();
+//        ds.regular = new StringBuffer();
+//        ds.regular.append((char) (di.readUnsignedByte()));
+//        ds.dim_info = new StringBuffer();
+//        ds.dim_info.append((char) (di.readUnsignedByte()));
+//
+//        int fps_dim = (int) ds.dim_info.charAt(0);
+//        ds.freq_dim = (short) (fps_dim & 3);
+//        ds.phase_dim = (short) ((fps_dim >>> 2) & 3);
+//        ds.slice_dim = (short) ((fps_dim >>> 4) & 3);
+//
+//        for (int i = 0; i < 8; i++)
+//            ds.dim[i] = di.readShort();
+//        if (ds.dim[0] > 0)
+//            ds.dim[1] = ds.dim[1];
+//        if (ds.dim[0] > 1)
+//            ds.dim[2] = ds.dim[2];
+//        if (ds.dim[0] > 2)
+//            ds.dim[3] = ds.dim[3];
+//        if (ds.dim[0] > 3)
+//            ds.dim[4] = ds.dim[4];
+//
+//        for (int i = 0; i < 3; i++)
+//            ds.intent[i] = di.readFloat();
+//
+//        ds.intent_code = di.readShort();
+//        ds.datatype = di.readShort();
+//        ds.bitpix = di.readShort();
+//        ds.slice_start = di.readShort();
+//
+//        for (int i = 0; i < 8; i++)
+//            ds.pixdim[i] = di.readFloat();
+//
+//        ds.qfac = (short) Math.floor((double) (ds.pixdim[0]));
+//        ds.vox_offset = di.readFloat();
+//        ds.scl_slope = di.readFloat();
+//        ds.scl_inter = di.readFloat();
+//        ds.slice_end = di.readShort();
+//        ds.slice_code = (byte) di.readUnsignedByte();
+//
+//        ds.xyzt_units = (byte) di.readUnsignedByte();
+//
+//        int unit_codes = (int) ds.xyzt_units;
+//        ds.xyz_unit_code = (short) (unit_codes & 007);
+//        ds.t_unit_code = (short) (unit_codes & 070);
+//
+//        ds.cal_max = di.readFloat();
+//        ds.cal_min = di.readFloat();
+//        ds.slice_duration = di.readFloat();
+//        ds.toffset = di.readFloat();
+//        ds.glmax = di.readInt();
+//        ds.glmin = di.readInt();
+//
+//        bb = new byte[80];
+//        di.readFully(bb, 0, 80);
+//        ds.descrip = new StringBuffer(new String(bb));
+//
+//        bb = new byte[24];
+//        di.readFully(bb, 0, 24);
+//        ds.aux_file = new StringBuffer(new String(bb));
+//
+//        ds.qform_code = di.readShort();
+//        ds.sform_code = di.readShort();
+//
+//        for (int i = 0; i < 3; i++)
+//            ds.quatern[i] = di.readFloat();
+//        for (int i = 0; i < 3; i++)
+//            ds.qoffset[i] = di.readFloat();
+//
+//        for (int i = 0; i < 4; i++)
+//            ds.srow_x[i] = di.readFloat();
+//        for (int i = 0; i < 4; i++)
+//            ds.srow_y[i] = di.readFloat();
+//        for (int i = 0; i < 4; i++)
+//            ds.srow_z[i] = di.readFloat();
+//
+//        bb = new byte[16];
+//        di.readFully(bb, 0, 16);
+//        ds.intent_name = new StringBuffer(new String(bb));
+//
+//        bb = new byte[4];
+//        di.readFully(bb, 0, 4);
+//        ds.magic = new StringBuffer(new String(bb));
+//
+//        di.readFully(ds.extension, 0, 4);
+//
+//        if (ds.extension[0] != (byte) 0)
+//        {
+//            int start_addr = NiftiHeader.ANZ_HDR_SIZE + 4;
+//
+//            while (start_addr < (int) ds.vox_offset)
+//            {
+//                int[] size_code = new int[2];
+//                size_code[0] = di.readInt();
+//                size_code[1] = di.readInt();
+//
+//                int nb = size_code[0] - NiftiHeader.EXT_KEY_SIZE;
+//                byte[] eblob = new byte[nb];
+//                di.readFully(eblob, 0, nb);
+//                ds.extension_blobs.add(eblob);
+//                ds.extensions_list.add(size_code);
+//                start_addr += (size_code[0]);
+//
+//                if (start_addr > (int) ds.vox_offset)
+//                    throw new IOException("Error: Data  for extension " + (ds.extensions_list.size())
+//                            + " appears to overrun start of image data.");
+//            }
+//        }
+//
+//        return ds;
+//    }
     
-    public static NiftiHeader readFromStream(InputStream is) throws IOException
+    public static NiftiHeader read(InputStream is) throws IOException
     {
         DataInput di;
 
@@ -790,7 +788,6 @@ public class NiftiHeader
 
         NiftiHeader ds = new NiftiHeader();
 
-//        ds.filename = fn;
         ds.little_endian = le;
         ds.sizeof_hdr = di.readInt();
 
@@ -914,133 +911,133 @@ public class NiftiHeader
         return ds;
     }
 
-    public static NiftiHeader readFromDataInput(DataInput di) throws IOException
-    {
-    	
-    	NiftiHeader ds = new NiftiHeader();
-
-    	ds.little_endian = littleEndianStream(di);
-    	ds.sizeof_hdr = di.readInt();
-    	
-    	byte[] bb = new byte[10];
-    	di.readFully(bb, 0, 10);
-    	ds.data_type_string = new StringBuffer(new String(bb));
-    	
-    	bb = new byte[18];
-    	di.readFully(bb, 0, 18);
-    	ds.db_name = new StringBuffer(new String(bb));
-    	ds.extents = di.readInt();
-    	ds.session_error = di.readShort();
-    	ds.regular = new StringBuffer();
-    	ds.regular.append((char) (di.readUnsignedByte()));
-    	ds.dim_info = new StringBuffer();
-    	ds.dim_info.append((char) (di.readUnsignedByte()));
-    	
-    	int fps_dim = (int) ds.dim_info.charAt(0);
-    	ds.freq_dim = (short) (fps_dim & 3);
-    	ds.phase_dim = (short) ((fps_dim >>> 2) & 3);
-    	ds.slice_dim = (short) ((fps_dim >>> 4) & 3);
-    	
-    	for (int i = 0; i < 8; i++)
-    		ds.dim[i] = di.readShort();
-    	if (ds.dim[0] > 0)
-    		ds.dim[1] = ds.dim[1];
-    	if (ds.dim[0] > 1)
-    		ds.dim[2] = ds.dim[2];
-    	if (ds.dim[0] > 2)
-    		ds.dim[3] = ds.dim[3];
-    	if (ds.dim[0] > 3)
-    		ds.dim[4] = ds.dim[4];
-    	
-    	for (int i = 0; i < 3; i++)
-    		ds.intent[i] = di.readFloat();
-    	
-    	ds.intent_code = di.readShort();
-    	ds.datatype = di.readShort();
-    	ds.bitpix = di.readShort();
-    	ds.slice_start = di.readShort();
-    	
-    	for (int i = 0; i < 8; i++)
-    		ds.pixdim[i] = di.readFloat();
-    	
-    	ds.qfac = (short) Math.floor((double) (ds.pixdim[0]));
-    	ds.vox_offset = di.readFloat();
-    	ds.scl_slope = di.readFloat();
-    	ds.scl_inter = di.readFloat();
-    	ds.slice_end = di.readShort();
-    	ds.slice_code = (byte) di.readUnsignedByte();
-    	
-    	ds.xyzt_units = (byte) di.readUnsignedByte();
-    	
-    	int unit_codes = (int) ds.xyzt_units;
-    	ds.xyz_unit_code = (short) (unit_codes & 007);
-    	ds.t_unit_code = (short) (unit_codes & 070);
-    	
-    	ds.cal_max = di.readFloat();
-    	ds.cal_min = di.readFloat();
-    	ds.slice_duration = di.readFloat();
-    	ds.toffset = di.readFloat();
-    	ds.glmax = di.readInt();
-    	ds.glmin = di.readInt();
-    	
-    	bb = new byte[80];
-    	di.readFully(bb, 0, 80);
-    	ds.descrip = new StringBuffer(new String(bb));
-    	
-    	bb = new byte[24];
-    	di.readFully(bb, 0, 24);
-    	ds.aux_file = new StringBuffer(new String(bb));
-    	
-    	ds.qform_code = di.readShort();
-    	ds.sform_code = di.readShort();
-    	
-    	for (int i = 0; i < 3; i++)
-    		ds.quatern[i] = di.readFloat();
-    	for (int i = 0; i < 3; i++)
-    		ds.qoffset[i] = di.readFloat();
-    	
-    	for (int i = 0; i < 4; i++)
-    		ds.srow_x[i] = di.readFloat();
-    	for (int i = 0; i < 4; i++)
-    		ds.srow_y[i] = di.readFloat();
-    	for (int i = 0; i < 4; i++)
-    		ds.srow_z[i] = di.readFloat();
-    	
-    	bb = new byte[16];
-    	di.readFully(bb, 0, 16);
-    	ds.intent_name = new StringBuffer(new String(bb));
-    	
-    	bb = new byte[4];
-    	di.readFully(bb, 0, 4);
-    	ds.magic = new StringBuffer(new String(bb));
-    	
-    	di.readFully(ds.extension, 0, 4);
-    	
-    	if (ds.extension[0] != (byte) 0)
-    	{
-    		int start_addr = NiftiHeader.ANZ_HDR_SIZE + 4;
-    		
-    		while (start_addr < (int) ds.vox_offset)
-    		{
-    			int[] size_code = new int[2];
-    			size_code[0] = di.readInt();
-    			size_code[1] = di.readInt();
-    			
-    			int nb = size_code[0] - NiftiHeader.EXT_KEY_SIZE;
-    			byte[] eblob = new byte[nb];
-    			di.readFully(eblob, 0, nb);
-    			ds.extension_blobs.add(eblob);
-    			ds.extensions_list.add(size_code);
-    			start_addr += (size_code[0]);
-    			
-    			if (start_addr > (int) ds.vox_offset)
-    				throw new IOException("Error: Data  for extension " + (ds.extensions_list.size())
-    						+ " appears to overrun start of image data.");
-    		}
-    	}
-    	
-    	return ds;
-    }
+//    public static NiftiHeader readFromDataInput(DataInput di) throws IOException
+//    {
+//    	
+//    	NiftiHeader ds = new NiftiHeader();
+//
+//    	ds.little_endian = littleEndianStream(di);
+//    	ds.sizeof_hdr = di.readInt();
+//    	
+//    	byte[] bb = new byte[10];
+//    	di.readFully(bb, 0, 10);
+//    	ds.data_type_string = new StringBuffer(new String(bb));
+//    	
+//    	bb = new byte[18];
+//    	di.readFully(bb, 0, 18);
+//    	ds.db_name = new StringBuffer(new String(bb));
+//    	ds.extents = di.readInt();
+//    	ds.session_error = di.readShort();
+//    	ds.regular = new StringBuffer();
+//    	ds.regular.append((char) (di.readUnsignedByte()));
+//    	ds.dim_info = new StringBuffer();
+//    	ds.dim_info.append((char) (di.readUnsignedByte()));
+//    	
+//    	int fps_dim = (int) ds.dim_info.charAt(0);
+//    	ds.freq_dim = (short) (fps_dim & 3);
+//    	ds.phase_dim = (short) ((fps_dim >>> 2) & 3);
+//    	ds.slice_dim = (short) ((fps_dim >>> 4) & 3);
+//    	
+//    	for (int i = 0; i < 8; i++)
+//    		ds.dim[i] = di.readShort();
+//    	if (ds.dim[0] > 0)
+//    		ds.dim[1] = ds.dim[1];
+//    	if (ds.dim[0] > 1)
+//    		ds.dim[2] = ds.dim[2];
+//    	if (ds.dim[0] > 2)
+//    		ds.dim[3] = ds.dim[3];
+//    	if (ds.dim[0] > 3)
+//    		ds.dim[4] = ds.dim[4];
+//    	
+//    	for (int i = 0; i < 3; i++)
+//    		ds.intent[i] = di.readFloat();
+//    	
+//    	ds.intent_code = di.readShort();
+//    	ds.datatype = di.readShort();
+//    	ds.bitpix = di.readShort();
+//    	ds.slice_start = di.readShort();
+//    	
+//    	for (int i = 0; i < 8; i++)
+//    		ds.pixdim[i] = di.readFloat();
+//    	
+//    	ds.qfac = (short) Math.floor((double) (ds.pixdim[0]));
+//    	ds.vox_offset = di.readFloat();
+//    	ds.scl_slope = di.readFloat();
+//    	ds.scl_inter = di.readFloat();
+//    	ds.slice_end = di.readShort();
+//    	ds.slice_code = (byte) di.readUnsignedByte();
+//    	
+//    	ds.xyzt_units = (byte) di.readUnsignedByte();
+//    	
+//    	int unit_codes = (int) ds.xyzt_units;
+//    	ds.xyz_unit_code = (short) (unit_codes & 007);
+//    	ds.t_unit_code = (short) (unit_codes & 070);
+//    	
+//    	ds.cal_max = di.readFloat();
+//    	ds.cal_min = di.readFloat();
+//    	ds.slice_duration = di.readFloat();
+//    	ds.toffset = di.readFloat();
+//    	ds.glmax = di.readInt();
+//    	ds.glmin = di.readInt();
+//    	
+//    	bb = new byte[80];
+//    	di.readFully(bb, 0, 80);
+//    	ds.descrip = new StringBuffer(new String(bb));
+//    	
+//    	bb = new byte[24];
+//    	di.readFully(bb, 0, 24);
+//    	ds.aux_file = new StringBuffer(new String(bb));
+//    	
+//    	ds.qform_code = di.readShort();
+//    	ds.sform_code = di.readShort();
+//    	
+//    	for (int i = 0; i < 3; i++)
+//    		ds.quatern[i] = di.readFloat();
+//    	for (int i = 0; i < 3; i++)
+//    		ds.qoffset[i] = di.readFloat();
+//    	
+//    	for (int i = 0; i < 4; i++)
+//    		ds.srow_x[i] = di.readFloat();
+//    	for (int i = 0; i < 4; i++)
+//    		ds.srow_y[i] = di.readFloat();
+//    	for (int i = 0; i < 4; i++)
+//    		ds.srow_z[i] = di.readFloat();
+//    	
+//    	bb = new byte[16];
+//    	di.readFully(bb, 0, 16);
+//    	ds.intent_name = new StringBuffer(new String(bb));
+//    	
+//    	bb = new byte[4];
+//    	di.readFully(bb, 0, 4);
+//    	ds.magic = new StringBuffer(new String(bb));
+//    	
+//    	di.readFully(ds.extension, 0, 4);
+//    	
+//    	if (ds.extension[0] != (byte) 0)
+//    	{
+//    		int start_addr = NiftiHeader.ANZ_HDR_SIZE + 4;
+//    		
+//    		while (start_addr < (int) ds.vox_offset)
+//    		{
+//    			int[] size_code = new int[2];
+//    			size_code[0] = di.readInt();
+//    			size_code[1] = di.readInt();
+//    			
+//    			int nb = size_code[0] - NiftiHeader.EXT_KEY_SIZE;
+//    			byte[] eblob = new byte[nb];
+//    			di.readFully(eblob, 0, nb);
+//    			ds.extension_blobs.add(eblob);
+//    			ds.extensions_list.add(size_code);
+//    			start_addr += (size_code[0]);
+//    			
+//    			if (start_addr > (int) ds.vox_offset)
+//    				throw new IOException("Error: Data  for extension " + (ds.extensions_list.size())
+//    						+ " appears to overrun start of image data.");
+//    		}
+//    	}
+//    	
+//    	return ds;
+//    }
 
     public byte[] encodeHeader() throws IOException
     {

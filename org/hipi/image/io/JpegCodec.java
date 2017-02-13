@@ -2,6 +2,7 @@ package org.hipi.image.io;
 
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.HipiImage;
 import org.hipi.image.RasterImage;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
@@ -80,7 +82,13 @@ public class JpegCodec extends ImageCodec {
 			exifData = ExifDataReader.extractAndFlatten(dis);
 		}
 		
-		return new HipiImageHeader(HipiImageFormat.JPEG, HipiColorSpace.RGB, width, height, 3, null, exifData);
+		Map<HipiKeyImageInfo, Object> values = new HashMap<HipiKeyImageInfo, Object>();
+		values.put(HipiKeyImageInfo.COLOR_SPACE, HipiColorSpace.RGB);
+		values.put(HipiKeyImageInfo.WIDTH, width);
+		values.put(HipiKeyImageInfo.HEIGHT, height);
+		values.put(HipiKeyImageInfo.BANDS, 3);
+		
+		return new HipiImageHeader(HipiImageFormat.JPEG, values, null, exifData);
 	}
 
 	public void encodeImage(HipiImage image, OutputStream outputStream) throws IllegalArgumentException, IOException {
@@ -107,8 +115,7 @@ public class JpegCodec extends ImageCodec {
 
 		ImageWriteParam param = writer.getDefaultWriteParam();
 		param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-//		param.setCompressionQuality(0.95F); // highest JPEG quality = 1.0F
-		param.setCompressionQuality(1.0F); // highest JPEG quality = 1.0F
+		param.setCompressionQuality(0.95F); // highest JPEG quality = 1.0F
 		encodeRasterImage((RasterImage) image, writer, param);
 	}
 

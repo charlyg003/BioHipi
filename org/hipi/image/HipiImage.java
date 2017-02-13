@@ -16,7 +16,7 @@ import java.util.HashMap;
 public abstract class HipiImage implements Writable {
 
 	/**
-	 * Enumeration of the supported image object types in HIPI (e.g., FloatImage, ByteImage, NiftiImage etc.).
+	 * Enumeration of the supported image object types in HIPI (FloatImage, ByteImage, NiftiImage, DicomImage, RdaImage).
 	 */
 	public enum HipiImageType {
 		UNDEFINED(0x0), FLOAT(0x1), BYTE(0x2), RAW(0x3), NIFTI(0x4), DICOM(0x5), RDA(0x6);
@@ -94,7 +94,7 @@ public abstract class HipiImage implements Writable {
 		if (header == null)
 			throw new IllegalArgumentException("Image header must not be null.");
 
-		if (header.getValues() == null)
+		if (header.getAllImageInfo() == null)
 			throw new IllegalArgumentException("Header's values must not be null.");
 
 		this.header = header;

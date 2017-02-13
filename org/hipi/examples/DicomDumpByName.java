@@ -14,24 +14,30 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.hipi.image.DicomImage;
 import org.hipi.image.HipiImageHeader;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.imagebundle.mapreduce.HibInputFormat;
 
-public class DicomDumpByNameMapReduce extends Configured implements Tool {
-	
+/**
+ * DicomDumpByName is an example of how to manipulate
+ * DICOM images in HIB.<br>
+ * Specifically, it returns a string representation
+ * of each DICOM image, owned by a specific patient,
+ * such as a list of tags.
+ */
+public class DicomDumpByName extends Configured implements Tool {
+
 	static String name = null;
-	
+
 	public static class DicomDumpMapper extends Mapper<HipiImageHeader, DicomImage, Text, DicomImage> {
 
 		public void map(HipiImageHeader key, DicomImage value, Context context)
 				throws IOException, InterruptedException {
 
-			if (value.getDicomInputStream() != null) {
-
-				if ( ((String)key.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME)).contains(name.toUpperCase()) 
-						|| ((String)key.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME)).contains(name.toLowerCase()) 
-						|| ((String)key.getValue(HipiImageHeader.DICOM_INDEX_PATIENT_NAME)).contains(name))
-					context.write(new Text(key.toString()), value);
-			} 
+			if ((value != null) &&
+					(((String)key.getImageInfo(HipiKeyImageInfo.PATIENT_NAME)).contains(name.toUpperCase()) 
+					|| ((String)key.getImageInfo(HipiKeyImageInfo.PATIENT_NAME)).contains(name.toLowerCase()) 
+					|| ((String)key.getImageInfo(HipiKeyImageInfo.PATIENT_NAME)).contains(name)) )
+				context.write(new Text(key.toString()), value);
 		}
 	} 
 
@@ -54,15 +60,15 @@ public class DicomDumpByNameMapReduce extends Configured implements Tool {
 			System.out.println("Usage: nameFile.jar name <input HIB> <output directory>");
 			System.exit(0);
 		}
-		
+
 		name = args[0];
-		
+
 		// Initialize and configure MapReduce job
 		Job job = Job.getInstance();
 		// Set input format class which parses the input HIB and spawns map tasks
 		job.setInputFormatClass(HibInputFormat.class);
 		// Set the driver, mapper, and reducer classes which express the computation
-		job.setJarByClass(DicomDumpByNameMapReduce.class);
+		job.setJarByClass(DicomDumpByName.class);
 		job.setMapperClass(DicomDumpMapper.class);
 		job.setReducerClass(DicomDumpReducer.class);
 		// Set the types for the key/value pairs passed to/from map and reduce layers
@@ -83,7 +89,7 @@ public class DicomDumpByNameMapReduce extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		ToolRunner.run(new DicomDumpByNameMapReduce(), args);
+		ToolRunner.run(new DicomDumpByName(), args);
 		System.exit(0);
 	}
 

@@ -291,7 +291,7 @@ public class HipiImageBundle {
 				// Call appropriate decode function based on type of image
 				// object
 				switch (imageFactory.getType()) {
-				
+
 				case FLOAT:
 				case BYTE:
 					try {
@@ -317,7 +317,7 @@ public class HipiImageBundle {
 						return nextKeyValue();
 					}
 					break;
-					
+
 				case RDA:
 					throw new RuntimeException("Support for RDA image type not yet implemented.");
 
@@ -334,7 +334,7 @@ public class HipiImageBundle {
 						return nextKeyValue();
 					}
 					throw new RuntimeException("Support for RAW image type not yet implemented.");
-					
+
 				case UNDEFINED:
 				default:
 					throw new IOException("Unexpected image type. Cannot proceed.");
@@ -646,13 +646,13 @@ public class HipiImageBundle {
 
 		inputStream				 = new ByteArrayInputStream(baos.toByteArray());
 		InputStream ipForDecoder = new ByteArrayInputStream(baos.toByteArray());
-		
+
 		HipiImageHeader header = null;
-		if (imageFormat == HipiImageFormat.DICOM)
-			header = decoder.decodeHeader(ipForDecoder);
-		else 
-			header = decoder.decodeHeader(ipForDecoder);
-			
+		//		if (imageFormat == HipiImageFormat.DICOM)
+		//			header = decoder.decodeHeader(ipForDecoder);
+		//		else 
+		header = decoder.decodeHeader(ipForDecoder);
+
 		if (metaData != null)
 			header.setMetaData(metaData);
 

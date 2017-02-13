@@ -3,6 +3,7 @@ package org.hipi.image;
 import org.hipi.image.HipiImage;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.util.ByteUtils;
 
 import java.io.DataInput;
@@ -46,7 +47,7 @@ public class RawImage extends HipiImage {
 	 * @return color space of image
 	 */
 	public HipiColorSpace getColorSpace() {
-		return HipiColorSpace.fromInteger((Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_COLOR_SPACE));
+		return HipiColorSpace.fromInteger((Integer)header.getImageInfo(HipiKeyImageInfo.COLOR_SPACE));
 	}
 
 	/**
@@ -55,7 +56,7 @@ public class RawImage extends HipiImage {
 	 * @return width of image
 	 */
 	public int getWidth() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.WIDTH);
 	}
 
 	/**
@@ -64,7 +65,7 @@ public class RawImage extends HipiImage {
 	 * @return height of image
 	 */
 	public int getHeight() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.HEIGHT);
 	}
 
 	/**
@@ -73,7 +74,7 @@ public class RawImage extends HipiImage {
 	 * @return number of color bands in image
 	 */
 	public int getNumBands() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_BANDS);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.BANDS);
 	}
 
 	/**

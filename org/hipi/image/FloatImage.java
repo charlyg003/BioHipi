@@ -1,7 +1,11 @@
 package org.hipi.image;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.RasterImage;
 import org.hipi.image.PixelArrayFloat;
@@ -31,23 +35,41 @@ public class FloatImage extends RasterImage {
 
 	public FloatImage(int width, int height, int bands) throws IllegalArgumentException {
 		super((PixelArray)(new PixelArrayFloat()));
-		HipiImageHeader header = new HipiImageHeader(HipiImageFormat.JPEG, HipiColorSpace.UNDEFINED, width, height, bands, null, null);
+		
+		Map<HipiKeyImageInfo, Object> values = new HashMap<HipiKeyImageInfo, Object>();
+		values.put(HipiKeyImageInfo.COLOR_SPACE, HipiColorSpace.UNDEFINED);
+		values.put(HipiKeyImageInfo.WIDTH, width);
+		values.put(HipiKeyImageInfo.HEIGHT, height);
+		values.put(HipiKeyImageInfo.BANDS, bands);
+		
+		HipiImageHeader header = new HipiImageHeader(HipiImageFormat.JPEG, values, null, null);
 		setHeader(header);
 	}
 
 	public FloatImage(int width, int height, int bands, HipiImageFormat imgFormat, HipiColorSpace colorspace) throws IllegalArgumentException {
 		super((PixelArray)(new PixelArrayFloat()));
-		HipiImageHeader header = new HipiImageHeader(imgFormat, colorspace,
-				width, height, bands, null, null);
+		
+		Map<HipiKeyImageInfo, Object> values = new HashMap<HipiKeyImageInfo, Object>();
+		values.put(HipiKeyImageInfo.COLOR_SPACE, colorspace);
+		values.put(HipiKeyImageInfo.WIDTH, width);
+		values.put(HipiKeyImageInfo.HEIGHT, height);
+		values.put(HipiKeyImageInfo.BANDS, bands);
+		
+		HipiImageHeader header = new HipiImageHeader(imgFormat, values, null, null);
 		setHeader(header);
 	}
 
 	public FloatImage(int width, int height, int bands, float[] data) 
 			throws IllegalArgumentException {
 		super((PixelArray)(new PixelArrayFloat()));
-		//    HipiImageHeader header = new HipiImageHeader(HipiImageFormat.UNDEFINED, HipiColorSpace.UNDEFINED,
-		HipiImageHeader header = new HipiImageHeader(HipiImageFormat.JPEG, HipiColorSpace.UNDEFINED,
-				width, height, bands, null, null);
+		
+		Map<HipiKeyImageInfo, Object> values = new HashMap<HipiKeyImageInfo, Object>();
+		values.put(HipiKeyImageInfo.COLOR_SPACE, HipiColorSpace.UNDEFINED);
+		values.put(HipiKeyImageInfo.WIDTH, width);
+		values.put(HipiKeyImageInfo.HEIGHT, height);
+		values.put(HipiKeyImageInfo.BANDS, bands);
+		
+		HipiImageHeader header = new HipiImageHeader(HipiImageFormat.JPEG, values, null, null);
 		setHeader(header);
 		if (data == null || data.length != width*height*bands) {
 			throw new IllegalArgumentException("Size of data buffer does not match image dimensions.");

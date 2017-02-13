@@ -33,7 +33,7 @@ public class HibToNifti extends Configured implements Tool {
     public void setup(Context context) throws IOException {
       Configuration conf = context.getConfiguration();
       fileSystem = FileSystem.get(context.getConfiguration());
-      path = new Path(conf.get("jpegfromhib.outdir"));
+      path = new Path(conf.get("niftifromhib.outdir"));
       fileSystem.mkdirs(path);
     }
 
@@ -67,8 +67,6 @@ public class HibToNifti extends Configured implements Tool {
 
       // Write image file to HDFS
       FSDataOutputStream os = fileSystem.create(outpath);
-//      NiftiVolume nii = image.getNifti();
-//      nii.write(os);
       
       NiftiCodec.getInstance().encodeImage(image, os);
       os.flush();
@@ -100,10 +98,10 @@ public class HibToNifti extends Configured implements Tool {
 
     // Setup job configuration
     Configuration conf = new Configuration();
-    conf.setStrings("jpegfromhib.outdir", outputPath);
+    conf.setStrings("niftifromhib.outdir", outputPath);
 
     // Setup MapReduce classes
-    Job job = Job.getInstance(conf, "jpegfromhib");
+    Job job = Job.getInstance(conf, "niftifromhib");
     job.setJarByClass(HibToNifti.class);
     job.setMapperClass(HibToNiftiMapper.class);
     job.setReducerClass(Reducer.class);

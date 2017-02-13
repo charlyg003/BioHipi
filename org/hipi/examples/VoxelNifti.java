@@ -21,9 +21,17 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
+/**
+ * 
+ * VoxelNifti is an example of how to manipulate
+ * NIfTI images in HIB.<br>
+ * Particularly identifies the maximum value
+ * of a sample of coordinates of each NIfTI image.
+ * 
+ */
 public class VoxelNifti extends Configured implements Tool {
 
-	public static class VoxelMapper extends Mapper<HipiImageHeader, NiftiImage, Text, DoubleWritable> {
+	public static class VoxelNiftiMapper extends Mapper<HipiImageHeader, NiftiImage, Text, DoubleWritable> {
 
 		public Path path;
 		public FileSystem fileSystem;
@@ -32,15 +40,10 @@ public class VoxelNifti extends Configured implements Tool {
 		public void setup(Context context) throws IOException {
 			Configuration conf = context.getConfiguration();
 			fileSystem = FileSystem.get(context.getConfiguration());
-			path = new Path(conf.get("mapReduceExample.outdir"));
+			path = new Path(conf.get("voxelNifti.outdir"));
 			fileSystem.mkdirs(path);
 		}
 
-		/* 
-		 * Write each image (represented as an encoded byte array) to the
-		 * HDFS using the hash of the byte array to generate a unique
-		 * filename.
-		 */
 		@Override
 		public void map(HipiImageHeader header, NiftiImage image, Context context) throws IOException, InterruptedException {
 
@@ -64,7 +67,7 @@ public class VoxelNifti extends Configured implements Tool {
 
 			NiftiVolume nii = image.getNiftiVolume();
 			double[][][][] data = nii.data;
-
+			
 			for(int i=110; i<130; i++)
 				for(int j=110; j<130; j++)
 					for(int k=110; k<130; k++){
@@ -76,7 +79,7 @@ public class VoxelNifti extends Configured implements Tool {
 		}
 	}
 
-	public static class VoxelReduced extends Reducer<Text, DoubleWritable, Text, Double>{
+	public static class VoxelNiftiReduced extends Reducer<Text, DoubleWritable, Text, Double>{
 
 		@Override
 		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException{
@@ -118,8 +121,8 @@ public class VoxelNifti extends Configured implements Tool {
 		// Setup MapReduce classes
 		Job job = Job.getInstance(conf, "voxelNifti");
 		job.setJarByClass(VoxelNifti.class);
-		job.setMapperClass(VoxelMapper.class);
-		job.setReducerClass(VoxelReduced.class);
+		job.setMapperClass(VoxelNiftiMapper.class);
+		job.setReducerClass(VoxelNiftiReduced.class);
 
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Double.class);

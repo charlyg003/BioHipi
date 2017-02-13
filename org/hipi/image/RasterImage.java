@@ -3,6 +3,7 @@ package org.hipi.image;
 import org.hipi.image.PixelArray;
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.image.HipiImage;
 
 
@@ -28,7 +29,6 @@ public abstract class RasterImage extends HipiImage {
 	public void setHeader(HipiImageHeader header) 
 			throws IllegalArgumentException {
 		super.setHeader(header);
-//		int size = header.getValue(HipiImageHeader.INDEX_JPEG_PNG_WIDTH)*header.getValue(HipiImageHeader.INDEX_JPEG_PNG_HEIGHT)*header.getValue(HipiImageHeader.INDEX_JPEG_PNG_BANDS);
 		int size = this.getWidth()*this.getHeight()*this.getNumBands();
 		pixelArray.setSize(size);
 	}
@@ -43,7 +43,7 @@ public abstract class RasterImage extends HipiImage {
 	 * @return color space of image
 	 */
 	public HipiColorSpace getColorSpace() {
-		return HipiColorSpace.fromInteger((Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_COLOR_SPACE));
+		return HipiColorSpace.fromInteger((Integer)header.getImageInfo(HipiKeyImageInfo.COLOR_SPACE));
 	}
 
 	/**
@@ -52,7 +52,7 @@ public abstract class RasterImage extends HipiImage {
 	 * @return width of image
 	 */
 	public int getWidth() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_WIDTH);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.WIDTH);
 	}
 
 	/**
@@ -61,7 +61,7 @@ public abstract class RasterImage extends HipiImage {
 	 * @return height of image
 	 */
 	public int getHeight() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_HEIGHT);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.HEIGHT);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public abstract class RasterImage extends HipiImage {
 	 * @return number of color bands in image
 	 */
 	public int getNumBands() {
-		return (Integer)header.getValue(HipiImageHeader.JPEG_PNG_INDEX_BANDS);
+		return (Integer)header.getImageInfo(HipiKeyImageInfo.BANDS);
 	}
 
 	/**

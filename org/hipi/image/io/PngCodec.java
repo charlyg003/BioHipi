@@ -2,6 +2,7 @@ package org.hipi.image.io;
 
 import org.hipi.image.HipiImageHeader;
 import org.hipi.image.HipiImageHeader.HipiImageFormat;
+import org.hipi.image.HipiImageHeader.HipiKeyImageInfo;
 import org.hipi.image.HipiImageHeader.HipiColorSpace;
 import org.hipi.image.RasterImage;
 import org.hipi.image.HipiImage;
@@ -22,6 +23,7 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -145,7 +147,13 @@ public class PngCodec extends ImageCodec { // implements ImageDecoder,
 			exifData = ExifDataReader.extractAndFlatten(dis);
 		}
 
-		return new HipiImageHeader(HipiImageFormat.PNG, HipiColorSpace.RGB, width, height, 3, null, exifData);
+		Map<HipiKeyImageInfo, Object> values = new HashMap<HipiKeyImageInfo, Object>();
+		values.put(HipiKeyImageInfo.COLOR_SPACE, HipiColorSpace.RGB);
+		values.put(HipiKeyImageInfo.WIDTH, width);
+		values.put(HipiKeyImageInfo.HEIGHT, height);
+		values.put(HipiKeyImageInfo.BANDS, 3);
+		
+		return new HipiImageHeader(HipiImageFormat.PNG, values, null, exifData);
 	}
 
 	protected static void readSignature(DataInputStream in) throws IOException {
