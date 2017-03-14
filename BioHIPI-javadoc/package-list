@@ -1,0 +1,8 @@
+org.biohipi.examples
+org.biohipi.image
+org.biohipi.image.io
+org.biohipi.imagebundle
+org.biohipi.imagebundle.mapreduce
+org.biohipi.tools
+org.biohipi.util
+org.biohipi.util.niftijio
