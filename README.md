@@ -1,4 +1,4 @@
-# NiHipi
+# BioHipi
 HIPI Extension for biomedical images 
 
 A Hadoop framework for image analysis.
